@@ -1,0 +1,9 @@
+string goal_id
+float32 goal_limit
+float32 x
+float32 y
+float32 z
+float32 x_accel
+float32 y_accel
+float32 z_accel
+float32 yaw_accel
