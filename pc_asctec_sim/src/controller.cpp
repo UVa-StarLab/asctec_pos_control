@@ -10,18 +10,22 @@ POS_DATA position_data;
 float k_p_x;
 float k_i_x;
 float k_d_x;
+float k_acc_x;
 
 float k_p_y;
 float k_i_y;
 float k_d_y;
+float k_acc_y;
 
 float k_p_z;
 float k_i_z;
 float k_d_z;
+float k_acc_z;
 
 float k_p_yaw;
 float k_i_yaw;
 float k_d_yaw;
+float k_acc_yaw;
 
 ros::Publisher goal_feedback;
 
@@ -71,12 +75,12 @@ void init(struct POS_DATA * pos_ptr, struct PID_DATA * ctl_ptr)
 
    pos_ptr->accel_x = 0.0;
    pos_ptr->accel_y = 0.0;
-   pos_ptr->accel_z = 0.0;
+   pos_ptr->accel_z = 0.5;
    pos_ptr->accel_yaw = 0.0;
 
    pos_ptr->goal_x = 0.0;
    pos_ptr->goal_y = 0.0;
-   pos_ptr->goal_z = 0.5;
+   pos_ptr->goal_z = 0.7;
    pos_ptr->goal_yaw = 0.0;
 
    pos_ptr->goal_accel_x = 0.0;
@@ -84,7 +88,7 @@ void init(struct POS_DATA * pos_ptr, struct PID_DATA * ctl_ptr)
    pos_ptr->goal_accel_z = 0.0;
    pos_ptr->goal_accel_yaw = 0.0;
 
-   pos_ptr->goal_range = 0.01;
+   pos_ptr->goal_range = 0.1;
    pos_ptr->goal_arrival = false;
    pos_ptr->goal_id = "Init";
 
@@ -218,8 +222,8 @@ void update_real_cmd(struct PID_DATA * ctl_ptr, struct POS_DATA * pos_ptr)
 
    yaw = -(k_p_yaw * (ctl_ptr->error_yaw) + 
                          k_i_yaw * (ctl_ptr->integral_yaw) + 
-                         k_d_yaw * (ctl_ptr->diff_yaw)/* +
-                         ctl_ptr->error_accel_yaw*/);
+                         k_d_yaw * (ctl_ptr->diff_yaw) +
+                         k_acc_yaw * ctl_ptr->error_accel_yaw);
    
    if(yaw > YAW_MAX) {
       yaw = YAW_MAX;
@@ -231,13 +235,13 @@ void update_real_cmd(struct PID_DATA * ctl_ptr, struct POS_DATA * pos_ptr)
 
    pitch = -((k_p_x * (ctl_ptr->error_x) + 
                          k_i_x * (ctl_ptr->integral_x) + 
-                         k_d_x * 50 * (ctl_ptr->diff_x)/* +
-                         ctl_ptr->error_accel_x*/) *
+                         k_d_x * 50 * (ctl_ptr->diff_x) +
+                         k_acc_x * ctl_ptr->error_accel_x) *
                          cos(pos_ptr->pos_yaw)) + 
            -((k_p_y * (ctl_ptr->error_y) + 
                           k_i_y * (ctl_ptr->integral_y) + 
-                          k_d_y * 50 * (ctl_ptr->diff_y)/* +
-                          ctl_ptr->error_accel_y*/) *
+                          k_d_y * 50 * (ctl_ptr->diff_y) +
+                          k_acc_y * ctl_ptr->error_accel_y) *
                           sin(pos_ptr->pos_yaw));
    
    if(pitch > PITCH_MAX) {
@@ -250,13 +254,13 @@ void update_real_cmd(struct PID_DATA * ctl_ptr, struct POS_DATA * pos_ptr)
 
    roll = ((k_p_x * (ctl_ptr->error_x) + 
                          k_i_x * (ctl_ptr->integral_x) + 
-                         k_d_x * 50 * (ctl_ptr->diff_x)/* +
-                         ctl_ptr->error_accel_x*/) *
+                         k_d_x * 50 * (ctl_ptr->diff_x) +
+                         k_acc_x * ctl_ptr->error_accel_x) *
                          sin(pos_ptr->pos_yaw)) + 
            -((k_p_y * (ctl_ptr->error_y) + 
                           k_i_y * (ctl_ptr->integral_y) + 
-                          k_d_y * 50 * (ctl_ptr->diff_y) /*+
-                          ctl_ptr->error_accel_y*/) *
+                          k_d_y * 50 * (ctl_ptr->diff_y) +
+                          k_acc_y * ctl_ptr->error_accel_y) *
                           cos(pos_ptr->pos_yaw));
    
    if(roll > ROLL_MAX) {
@@ -269,8 +273,8 @@ void update_real_cmd(struct PID_DATA * ctl_ptr, struct POS_DATA * pos_ptr)
 
    thrust = k_p_z * (ctl_ptr->error_z) + 
                            k_i_z * (ctl_ptr->integral_z) + 
-                           k_d_z * 50 * (ctl_ptr->diff_z); //+
-                           //ctl_ptr->error_accel_z);
+                           k_d_z * 50 * (ctl_ptr->diff_z) +
+                           k_acc_z * ctl_ptr->error_accel_z;
 
    if(thrust > THRUST_MAX) {
       thrust = THRUST_MAX;
@@ -279,7 +283,7 @@ void update_real_cmd(struct PID_DATA * ctl_ptr, struct POS_DATA * pos_ptr)
    }
    
    real_cmd.thrust = thrust / THRUST_MAX;
-   //ROS_INFO_STREAM(pos_ptr->goal_z);
+   //ROS_INFO_STREAM(ctl_ptr->error_accel_y);
 }
 
 void update_sim_cmd(struct PID_DATA * ctl_ptr)
@@ -314,18 +318,22 @@ int main(int argc, char** argv) {
    ros::param::get("~k_p_x", k_p_x); 
    ros::param::get("~k_i_x", k_i_x); 
    ros::param::get("~k_d_x", k_d_x);
+   ros::param::get("~k_acc_x", k_acc_x);
 
    ros::param::get("~k_p_y", k_p_y); 
    ros::param::get("~k_i_y", k_i_y); 
    ros::param::get("~k_d_y", k_d_y);
+   ros::param::get("~k_acc_y", k_acc_y);
 
    ros::param::get("~k_p_z", k_p_z); 
    ros::param::get("~k_i_z", k_i_z); 
    ros::param::get("~k_d_z", k_d_z);   
+   ros::param::get("~k_acc_z", k_acc_z); 
  
    ros::param::get("~k_p_yaw", k_p_yaw); 
    ros::param::get("~k_i_yaw", k_i_yaw); 
    ros::param::get("~k_d_yaw", k_d_yaw);
+   ros::param::get("~k_acc_yaw", k_acc_yaw);
 
    tf::StampedTransform transform;
    tf::TransformListener listener;

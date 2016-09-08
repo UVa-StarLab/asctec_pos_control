@@ -4,7 +4,7 @@ float32 x
 float32 y
 float32 z
 float32 yaw
-float32 x_accel
-float32 y_accel
-float32 z_accel
-float32 yaw_accel
+float32 x_vel
+float32 y_vel
+float32 z_vel
+float32 yaw_vel

@@ -11,7 +11,7 @@
 #include <math.h>
 
 #define REAL  1			//define to broadcast to asctec hummingbird quadrotor
-#define DEBUG 1                 //define to broadcast debug messages
+#define DEBUG 0                 //define to broadcast debug messages
 #define CONTROL_RATE 50.0
 #define dt 1/CONTROL_RATE
 #define GOAL_LIMIT 0.01
