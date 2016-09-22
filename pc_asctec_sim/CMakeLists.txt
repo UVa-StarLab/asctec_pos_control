@@ -139,12 +139,14 @@ include_directories(
 add_executable(pc_asctec_sim_node src/traj_control.cpp)
 add_executable(asctec_trap_traj src/trap_traj.cpp)
 add_executable(asctec_circle_traj src/circle_traj.cpp)
+add_executable(asctec_ugv_follower src/ugv_follow.cpp)
 
 ## Add cmake target dependencies of the executable
 ## same as for the library above
 add_dependencies(pc_asctec_sim_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 add_dependencies(asctec_trap_traj ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 add_dependencies(asctec_circle_traj ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(asctec_ugv_follower ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Specify libraries to link a library or executable target against
 target_link_libraries(pc_asctec_sim_node
@@ -154,6 +156,9 @@ target_link_libraries(asctec_trap_traj
   ${catkin_LIBRARIES}
 )
 target_link_libraries(asctec_circle_traj
+  ${catkin_LIBRARIES}
+)
+target_link_libraries(asctec_ugv_follower
   ${catkin_LIBRARIES}
 )
 

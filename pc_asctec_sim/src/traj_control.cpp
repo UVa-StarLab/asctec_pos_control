@@ -187,10 +187,14 @@ void update_real_cmd(struct PID_DATA * ctl_ptr, struct POS_DATA * pos_ptr)
 
    real_cmd.yaw = M_PI * (yaw / YAW_MAX);
 
-   pitch = -(k_p_x * (ctl_ptr->error_x) + 
+   pitch = -((k_p_x * (ctl_ptr->error_x) + 
                          k_i_x * (ctl_ptr->integral_x) + 
                          k_d_x * (ctl_ptr->error_x_vel)) *
-                         cos(pos_ptr->pos_yaw);  
+                         cos(pos_ptr->pos_yaw)) + 
+           -((k_p_y * (ctl_ptr->error_y) + 
+                          k_i_y * (ctl_ptr->integral_y) + 
+                          k_d_y * (ctl_ptr->error_y_vel)) *
+                          sin(pos_ptr->pos_yaw)); 
    
    if(pitch > PITCH_MAX) {
       pitch = PITCH_MAX;
@@ -200,10 +204,14 @@ void update_real_cmd(struct PID_DATA * ctl_ptr, struct POS_DATA * pos_ptr)
 
    real_cmd.pitch = M_PI * (pitch / PITCH_MAX) / 12;
 
-   roll = -(k_p_y * (ctl_ptr->error_y) + 
+   roll = -((k_p_x * (ctl_ptr->error_x) + 
+                         k_i_x * (ctl_ptr->integral_x) + 
+                         k_d_x * (ctl_ptr->error_x_vel)) *
+                         sin(pos_ptr->pos_yaw)) +
+          -((k_p_y * (ctl_ptr->error_y) + 
                           k_i_y * (ctl_ptr->integral_y) + 
                           k_d_y * (ctl_ptr->error_y_vel)) *
-                          cos(pos_ptr->pos_yaw);
+                          cos(pos_ptr->pos_yaw));
    
    if(roll > ROLL_MAX) {
       roll = ROLL_MAX;

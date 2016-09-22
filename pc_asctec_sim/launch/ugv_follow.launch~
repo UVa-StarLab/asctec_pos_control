@@ -1,0 +1,8 @@
+<launch>
+  <include file="$(find pc_asctec_sim)/launch/pc.launch" />
+  <node name="asctec_ugv_follower" 
+        pkg="pc_asctec_sim" 
+        type="asctec_ugv_follower" 
+        output="screen" />
+
+</launch>

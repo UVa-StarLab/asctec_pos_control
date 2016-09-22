@@ -69,21 +69,21 @@ int main(int argc, char** argv) {
    y_commands[14] = 1.3;
    y_commands[15] = 1.6;
 
-   y_vel[0] = 0.2;
-   y_vel[1] = 0.35;
-   y_vel[2] = 0.5;
-   y_vel[3] = 0.5;
+   y_vel[0] = 0.1;
+   y_vel[1] = 0.2;
+   y_vel[2] = 0.35;
+   y_vel[3] = 0.4;
    y_vel[4] = 0.5;
-   y_vel[5] = 0.5;
-   y_vel[6] = 0.5;
-   y_vel[7] = 0.5;
-   y_vel[8] = 0.5;
-   y_vel[9] = 0.5;
+   y_vel[5] = 0.6;
+   y_vel[6] = 0.6;
+   y_vel[7] = 0.6;
+   y_vel[8] = 0.6;
+   y_vel[9] = 0.6;
    y_vel[10] = 0.5;
-   y_vel[11] = 0.5;
-   y_vel[12] = 0.5;
-   y_vel[13] = 0.35;
-   y_vel[14] = 0.2;
+   y_vel[11] = 0.4;
+   y_vel[12] = 0.35;
+   y_vel[13] = 0.2;
+   y_vel[14] = 0.1;
    y_vel[15] = 0.0;
 
    id[0] = "Point 0";

@@ -10,6 +10,7 @@ using namespace std;
 pc_asctec_sim::pc_goal_cmd goal;
 string current_goal_id;
 int counter;
+int flights = 24;
 
 float x_commands[8];
 float y_commands[8];
@@ -32,18 +33,75 @@ void feedback_callback(const pc_asctec_sim::pc_feedback::ConstPtr& msg)
       pos_goal.publish(goal);
       current_goal_id = "Prep Point";
 
-   }else {
-      ROS_INFO_STREAM("Goal ID: " + current_goal_id + " Reached");
-      current_goal_id = id[counter];
+   }else if(current_goal_id == "Shutdown1") {
+      ROS_INFO_STREAM("Returning to 0,0,0.55");
+      current_goal_id = "Shutdown2";
       goal.goal_id = current_goal_id;
-      goal.x = x_commands[counter];
-      goal.x_vel = x_vel[counter];
-      goal.y = y_commands[counter];
-      goal.y_vel = y_vel[counter];
+      goal.z = 0.55;
+      goal.z_vel = 0.0;
+      goal.goal_limit = 0.05;
       pos_goal.publish(goal);
-      ROS_INFO_STREAM("Goal ID: " + current_goal_id + " Set");
+
+   }else if(current_goal_id == "Shutdown2") {
+      ROS_INFO_STREAM("Returning to 0,0,0.4");
+      current_goal_id = "Shutdown3";
+      goal.goal_id = current_goal_id;
+      goal.z = 0.4;
+      goal.z_vel = 0.0;
+      goal.goal_limit = 0.05;
+      pos_goal.publish(goal);
+   
+   }else if(current_goal_id == "Shutdown3") {
+      ROS_INFO_STREAM("Returning to 0,0,0.25");
+      current_goal_id = "Shutdown4";
+      goal.goal_id = current_goal_id;
+      goal.z = 0.25;
+      goal.z_vel = 0.0;
+      goal.goal_limit = 0.05;
+      pos_goal.publish(goal);
+
+   }else if(current_goal_id == "Shutdown4") {
+      ROS_INFO_STREAM("Returning to 0,0,0.1");
+      current_goal_id = "Shutdown5";
+      goal.goal_id = current_goal_id;
+      goal.z = 0.1;
+      goal.z_vel = 0.0;
+      goal.goal_limit = 0.05;
+      pos_goal.publish(goal);
+
+   }else if(current_goal_id == "Shutdown5") {
+      ROS_INFO_STREAM("Returning to 0,0,0");
+      current_goal_id = "Waiting";
+      goal.goal_id = current_goal_id;
+      goal.z = 0.0;
+      goal.z_vel = 0.0;
+      goal.goal_limit = 0.05;
+      pos_goal.publish(goal);
+   
+   }else if(current_goal_id == "Waiting") {
+      ROS_INFO("Waiting, Manual Landing Required");
+
+   }else {
+      ROS_INFO_STREAM("Goal ID: " + (current_goal_id) + " Reached");
+      current_goal_id = id[counter & 7];
+      goal.goal_id = current_goal_id;
+      goal.x = x_commands[counter & 7];
+      goal.x_vel = x_vel[counter & 7];
+      goal.y = y_commands[counter & 7];
+      goal.y_vel = y_vel[counter & 7];
+      ROS_INFO_STREAM("Goal ID: " + (current_goal_id) + " Set");
       counter++;
-      counter &= 7;
+
+      if(counter >= flights) {
+         ROS_INFO_STREAM("Returning to 0,0,0.7");
+         current_goal_id = "Shutdown1";
+         goal.x = 0.0;
+         goal.x_vel = 0.0;
+         goal.y = 0.0;
+         goal.y_vel = 0.0;
+         goal.goal_limit = 0.01;
+      }
+      pos_goal.publish(goal);
    }
 }
 
@@ -81,7 +139,6 @@ int main(int argc, char** argv) {
    x_vel[5] = 0.21;
    x_vel[6] = 0.0;
    x_vel[7] = -0.21;
-   //x_vel[7] = 0.0;
 
    y_vel[0] = 0.0;
    y_vel[1] = -0.21;
@@ -91,7 +148,6 @@ int main(int argc, char** argv) {
    y_vel[5] = 0.21;
    y_vel[6] = 0.3;
    y_vel[7] = 0.21;
-   //y_vel[7] = 0.0;
 
    id[0] = "Point 0";
    id[1] = "Point 1";
