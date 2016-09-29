@@ -71,6 +71,7 @@ typedef struct POS_DATA
   float pos_y;
   float pos_z;
   float pos_yaw;
+  float relative_yaw;
 
   float pos_x_past;
   float pos_y_past;

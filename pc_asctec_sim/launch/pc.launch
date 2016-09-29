@@ -4,22 +4,23 @@
 
   <!-- Asctec Position Controller for Hummingbird -->
   <include file="$(find asctec_ll_updated)/launch/test.launch" />
-  <node name="asctec_controller" pkg="pc_asctec_sim" type="pc_asctec_sim_node" output="screen" >
-     <param name="k_p_x" value="12.0"/>      <!-- 12.0 -->
-     <param name="k_i_x" value="0.15"/>      <!-- 0.15 -->
-     <param name="k_d_x" value="23.0"/>      <!-- 22.5 -->
-
-     <param name="k_p_y" value="12.0"/>      <!-- 12.0 -->
-     <param name="k_i_y" value="0.15"/>      <!-- 0.15 -->
-     <param name="k_d_y" value="23.0"/>      <!-- 22.5 -->     
+  
+  <node name="asctec_controller" pkg="pc_asctec_sim" type="pc_asctec_sim_node" output="screen">
+     <param name="k_p_xy" value="12.0"/>      <!-- 12.0 -->
+     <param name="k_i_xy" value="0.15"/>      <!-- 0.15 -->
+     <param name="k_d_xy" value="23.0"/>      <!-- 22.5 -->
 
      <param name="k_p_z" value="2.35"/>      <!-- 2.55 -->   
      <param name="k_i_z" value="0.18"/>      <!-- 0.18 -->
      <param name="k_d_z" value="3.95"/>       <!-- 3.65 -->
 
-     <param name="k_p_yaw" value="3.5"/>     <!-- 3.0 -->
+     <param name="k_p_yaw" value="3.0"/>     <!-- 3.0 -->
      <param name="k_i_yaw" value="0.1"/>     <!-- 0.1 -->
-     <param name="k_d_yaw" value="0.84"/>    <!-- 0.54 -->
+     <param name="k_d_yaw" value="1.54"/>    <!-- 0.54 -->
+
+     <param name="quad_name" value="asctec"/>
+     <param name="world_frame" value="/odom"/>
+     <param name="quad_frame" value="/vicon/hummingbird_1/hummingbird_1"/>
 
   </node>
 </launch>

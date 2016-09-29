@@ -7,13 +7,9 @@ pc_asctec_sim::pc_feedback on_goal;
 PID_DATA ctl_data;
 POS_DATA position_data;
 
-float k_p_x;
-float k_i_x;
-float k_d_x;
-
-float k_p_y;
-float k_i_y;
-float k_d_y;
+float k_p_xy;
+float k_i_xy;
+float k_d_xy;
 
 float k_p_z;
 float k_i_z;
@@ -76,12 +72,10 @@ void init(struct POS_DATA * pos_ptr, struct PID_DATA * ctl_ptr)
    pos_ptr->goal_arrival = false;
    pos_ptr->goal_id = "Init";
 
-   #if REAL
    real_cmd.cmd[0] = true;
    real_cmd.cmd[1] = true;
    real_cmd.cmd[2] = true;
    real_cmd.cmd[3] = true;
-   #endif
 }
 
 bool goal_arrived(struct PID_DATA * ctl_ptr, struct POS_DATA * pos_ptr)
@@ -91,12 +85,12 @@ bool goal_arrived(struct PID_DATA * ctl_ptr, struct POS_DATA * pos_ptr)
                            (ctl_ptr->error_z) * (ctl_ptr->error_z); 
    
    if((distance <= (pos_ptr->goal_range)) && not (pos_ptr->goal_arrival)) { 
-     ROS_INFO("Goal Reached");
      pos_ptr->goal_arrival = true;
      on_goal.goal_id = pos_ptr->goal_id;
      on_goal.event = ros::Time::now();
      goal_feedback.publish(on_goal);
      return true;
+
    }
 
    return false;
@@ -108,7 +102,11 @@ void goal_callback(const pc_asctec_sim::pc_goal_cmd::ConstPtr& msg)
        position_data.goal_x = msg->x;
        position_data.goal_y = msg->y;
        position_data.goal_z = msg->z;
-       position_data.goal_yaw = msg->yaw;
+       if(msg->yaw >= -M_PI && msg->yaw <= M_PI) {
+          position_data.goal_yaw = msg->yaw;
+       }else {
+	  ROS_INFO("Max yaw limit Reached!");
+       }
        position_data.goal_vel_x = msg->x_vel;
        position_data.goal_vel_y = msg->y_vel;
        position_data.goal_vel_z = msg->z_vel;
@@ -117,13 +115,7 @@ void goal_callback(const pc_asctec_sim::pc_goal_cmd::ConstPtr& msg)
        position_data.goal_arrival = false;
        position_data.goal_range = msg->goal_limit;
        position_data.goal_id = msg->goal_id;
-       ROS_INFO("New Waypoint Set");
-
-       #if DEBUG
-       //ROS_INFO_STREAM(position_data.goal_vel_x);
-       //ROS_INFO_STREAM(position_data.goal_vel_y);
-       //ROS_INFO_STREAM(position_data.goal_vel_z);
-       #endif
+       
     }
 }
 
@@ -175,7 +167,7 @@ void update_real_cmd(struct PID_DATA * ctl_ptr, struct POS_DATA * pos_ptr)
    float thrust;
    float yaw;
 
-   yaw = -(k_p_yaw * (ctl_ptr->error_yaw) + 
+   yaw = (k_p_yaw * (ctl_ptr->error_yaw) + 
                          k_i_yaw * (ctl_ptr->integral_yaw) + 
                          k_d_yaw * (ctl_ptr->error_yaw_vel));
    
@@ -187,13 +179,13 @@ void update_real_cmd(struct PID_DATA * ctl_ptr, struct POS_DATA * pos_ptr)
 
    real_cmd.yaw = M_PI * (yaw / YAW_MAX);
 
-   pitch = -((k_p_x * (ctl_ptr->error_x) + 
-                         k_i_x * (ctl_ptr->integral_x) + 
-                         k_d_x * (ctl_ptr->error_x_vel)) *
+   pitch = ((k_p_xy * (ctl_ptr->error_x) + 
+                         k_i_xy * (ctl_ptr->integral_x) + 
+                         k_d_xy * (ctl_ptr->error_x_vel)) *
                          cos(pos_ptr->pos_yaw)) + 
-           -((k_p_y * (ctl_ptr->error_y) + 
-                          k_i_y * (ctl_ptr->integral_y) + 
-                          k_d_y * (ctl_ptr->error_y_vel)) *
+           ((k_p_xy * (ctl_ptr->error_y) + 
+                          k_i_xy * (ctl_ptr->integral_y) + 
+                          k_d_xy * (ctl_ptr->error_y_vel)) *
                           sin(pos_ptr->pos_yaw)); 
    
    if(pitch > PITCH_MAX) {
@@ -204,13 +196,13 @@ void update_real_cmd(struct PID_DATA * ctl_ptr, struct POS_DATA * pos_ptr)
 
    real_cmd.pitch = M_PI * (pitch / PITCH_MAX) / 12;
 
-   roll = -((k_p_x * (ctl_ptr->error_x) + 
-                         k_i_x * (ctl_ptr->integral_x) + 
-                         k_d_x * (ctl_ptr->error_x_vel)) *
+   roll = ((k_p_xy * (ctl_ptr->error_x) + 
+                         k_i_xy * (ctl_ptr->integral_x) + 
+                         k_d_xy * (ctl_ptr->error_x_vel)) *
                          sin(pos_ptr->pos_yaw)) +
-          -((k_p_y * (ctl_ptr->error_y) + 
-                          k_i_y * (ctl_ptr->integral_y) + 
-                          k_d_y * (ctl_ptr->error_y_vel)) *
+          ((k_p_xy * (ctl_ptr->error_y) + 
+                          k_i_xy * (ctl_ptr->integral_y) + 
+                          k_d_xy * (ctl_ptr->error_y_vel)) *
                           cos(pos_ptr->pos_yaw));
    
    if(roll > ROLL_MAX) {
@@ -239,18 +231,14 @@ int main(int argc, char** argv) {
    ros::init(argc, argv, "pos_controller");
    ros::NodeHandle nh;
 
-   accel_quad_cmd = nh.advertise<pc_asctec_sim::SICmd>("/asctec/cmd_si", 10);
-   goal_feedback = nh.advertise<pc_asctec_sim::pc_feedback>("/goal_feedback", 10);
-   pc_goal_cmd = nh.subscribe("/pos_goals", 1000, goal_callback);
-   ros::Rate rate(CONTROL_RATE);
+   string world_frame, quad_frame, name;
+   ros::param::get("~world_frame", world_frame);
+   ros::param::get("~quad_frame", quad_frame);
+   ros::param::get("~quad_name", name);
 
-   ros::param::get("~k_p_x", k_p_x); 
-   ros::param::get("~k_i_x", k_i_x); 
-   ros::param::get("~k_d_x", k_d_x);
-
-   ros::param::get("~k_p_y", k_p_y); 
-   ros::param::get("~k_i_y", k_i_y); 
-   ros::param::get("~k_d_y", k_d_y);
+   ros::param::get("~k_p_xy", k_p_xy); 
+   ros::param::get("~k_i_xy", k_i_xy); 
+   ros::param::get("~k_d_xy", k_d_xy);
 
    ros::param::get("~k_p_z", k_p_z); 
    ros::param::get("~k_i_z", k_i_z); 
@@ -260,6 +248,11 @@ int main(int argc, char** argv) {
    ros::param::get("~k_i_yaw", k_i_yaw); 
    ros::param::get("~k_d_yaw", k_d_yaw);
 
+   accel_quad_cmd = nh.advertise<pc_asctec_sim::SICmd>(name + "/cmd_si", 10);
+   goal_feedback = nh.advertise<pc_asctec_sim::pc_feedback>(name + "/goal_feedback", 10);
+   pc_goal_cmd = nh.subscribe(name + "/pos_goals", 1000, goal_callback);
+   ros::Rate rate(CONTROL_RATE);
+
    tf::StampedTransform transform;
    tf::TransformListener listener;
 
@@ -267,16 +260,28 @@ int main(int argc, char** argv) {
    POS_DATA * position_ptr = &position_data;
 
    init(position_ptr, controller_ptr);
-   listener.waitForTransform("/odom", "/vicon/hummingbird_1/hummingbird_1", 
+   listener.waitForTransform(world_frame, quad_frame, 
                              ros::Time(0), ros::Duration(10.0));
    ROS_INFO("Transform found!");
-   
+   listener.lookupTransform(world_frame, quad_frame, ros::Time(0), transform);
+   position_ptr->pos_x = transform.getOrigin().x();
+   position_ptr->pos_y = transform.getOrigin().y();
+   position_ptr->pos_z = transform.getOrigin().z();  
+   position_ptr->pos_yaw = tf::getYaw(transform.getRotation());
+   position_ptr->pos_x_past = transform.getOrigin().x();
+   position_ptr->pos_y_past = transform.getOrigin().y();
+   position_ptr->pos_z_past = transform.getOrigin().z(); 
+   position_ptr->pos_yaw_past = tf::getYaw(transform.getRotation());
+
+   position_ptr->goal_x = transform.getOrigin().x();
+   position_ptr->goal_y = transform.getOrigin().y();
+
    ros::Duration(3.0).sleep();   
    double timer_past, timer = 0;
+
    while (ros::ok()) {
     //Grab new transform data
-      listener.lookupTransform("/odom", "/vicon/hummingbird_1/hummingbird_1", 
-                               ros::Time(0), transform);
+      listener.lookupTransform(world_frame, quad_frame, ros::Time(0), transform);
       
     //Set t-1 position values
       position_ptr->pos_x_past = position_ptr->pos_x;
@@ -306,7 +311,6 @@ int main(int argc, char** argv) {
       update_real_cmd(controller_ptr, position_ptr);
       accel_quad_cmd.publish(real_cmd);
       #endif
-      //ROS_INFO_STREAM(position_ptr->vel_y);
       ros::spinOnce();
       rate.sleep();
    }
