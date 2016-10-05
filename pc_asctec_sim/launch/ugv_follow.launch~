@@ -38,6 +38,7 @@
         type="asctec_ugv_follower" 
         output="screen">
 
+     <param name="quad_name" value="hummingbird_1"/>
      <param name="world_frame" value="/odom"/>
      <param name="ugv_frame" value="/vicon/jackal2/jackal2"/>
   </node>

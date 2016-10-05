@@ -27,7 +27,7 @@
      <param name="k_i_yaw" value="0.1"/>     <!-- 0.1 -->
      <param name="k_d_yaw" value="1.54"/>    <!-- 0.54 -->
 
-     <param name="quad_name" value="hummingbird_1"/>
+     <param name="quad_name" value="/hummingbird_1"/>
      <param name="world_frame" value="/odom"/>
      <param name="quad_frame" value="/vicon/hummingbird_1/hummingbird_1"/>
 
