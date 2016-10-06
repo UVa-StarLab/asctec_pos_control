@@ -131,7 +131,7 @@ void center_shutdown_callback(const std_msgs::Empty::ConstPtr& msg)
    position_data.goal_x = 0.0;
    position_data.goal_y = 0.0;
    position_data.goal_z = 1.0;
-   position_data.goal_yaw = 0.0;
+   position_data.goal_yaw = 0.0 + 2*M_PI*yaw_counter;
    position_data.goal_range = 0.01;
    position_data.goal_arrival = false;
    position_data.goal_id = "center";

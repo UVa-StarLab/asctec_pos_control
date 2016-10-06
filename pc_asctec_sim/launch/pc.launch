@@ -3,7 +3,7 @@
   <include file="$(find vicon_bridge)/launch/vicon.launch" />
 
   <!-- Asctec Position Controller for Hummingbird -->
-  <include file="$(find asctec_ll_updated)/launch/test.launch" />
+  <include file="$(find asctec_ll_updated)/launch/connect.launch" />
   
   <node name="asctec_controller" pkg="pc_asctec_sim" type="pc_asctec_sim_node" output="screen">
      <param name="k_p_xy" value="14.0"/>      <!-- 12.0 -->
