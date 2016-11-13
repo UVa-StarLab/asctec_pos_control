@@ -19,6 +19,12 @@ float k_p_yaw;
 float k_i_yaw;
 float k_d_yaw;
 
+bool attack = false;
+bool att_dir = true;
+float att_off = 0.2;
+bool steady = false;
+bool counting = false;
+
 bool halt = false;
 bool centered = false;
 
@@ -26,11 +32,8 @@ float final_x, final_y, final_z, final_yaw;
 int yaw_counter = 0;
 string name;
 
-ros::Publisher goal_feedback;
-ros::Publisher accel_quad_cmd;
-ros::Subscriber pc_goal_cmd;
-ros::Subscriber shutdown_request;
-ros::Subscriber center_shutdown_request;
+ros::Publisher goal_feedback, accel_quad_cmd;
+ros::Subscriber pc_goal_cmd, shutdown_request, center_shutdown_request, joy_call;
 
 void init(struct POS_DATA * pos_ptr, struct PID_DATA * ctl_ptr)
 {
@@ -69,7 +72,7 @@ void init(struct POS_DATA * pos_ptr, struct PID_DATA * ctl_ptr)
 
    pos_ptr->goal_x = 0.0;
    pos_ptr->goal_y = 0.0;
-   pos_ptr->goal_z = 1.0;
+   pos_ptr->goal_z = 0.7;
    pos_ptr->goal_yaw = 0.0;
 
    pos_ptr->goal_vel_x = 0.0;
@@ -78,6 +81,8 @@ void init(struct POS_DATA * pos_ptr, struct PID_DATA * ctl_ptr)
    pos_ptr->goal_vel_yaw = 0.0;
 
    pos_ptr->goal_range = 0.05;
+   pos_ptr->wait_time = 0.0;
+   pos_ptr->waiting = false;
    pos_ptr->goal_arrival = false;
    pos_ptr->goal_id = "Init";
 
@@ -93,23 +98,31 @@ bool goal_arrived(struct PID_DATA * ctl_ptr, struct POS_DATA * pos_ptr)
                            (ctl_ptr->error_y) * (ctl_ptr->error_y) + 
                            (ctl_ptr->error_z) * (ctl_ptr->error_z); 
    
-   if((distance <= (pos_ptr->goal_range)) && not (pos_ptr->goal_arrival)) { 
-     pos_ptr->goal_arrival = true;
-     on_goal.goal_id = pos_ptr->goal_id;
-     on_goal.event = ros::Time::now();
-     goal_feedback.publish(on_goal);
-     if(pos_ptr->goal_id == "center") {
-        centered = true;
-	ROS_INFO("Centering behavior completed, now landing...");
-     }
-     return true;
+   if((distance <= (pos_ptr->goal_range)) && not (pos_ptr->goal_arrival)) {
+      pos_ptr->wait_start = ros::Time::now().toSec(); 
+      pos_ptr->waiting = true;  
+      pos_ptr->goal_arrival = true;
+      ROS_INFO("Target Arrived, waiting for %d seconds", pos_ptr->wait_time);
+   }
+   if(pos_ptr->waiting) {
+      if((ros::Time::now().toSec() - pos_ptr->wait_start) >= pos_ptr->wait_time) {
+         on_goal.goal_id = pos_ptr->goal_id;
+         on_goal.event = ros::Time::now();
+         goal_feedback.publish(on_goal);
+         pos_ptr->waiting = false;
+	 ROS_INFO("Wait time expired");
+         if(pos_ptr->goal_id == "center") {
+	    centered = true;
+         }
+         return true;
+      }
    }
    return false;
 }
 
 void goal_callback(const pc_asctec_sim::pc_goal_cmd::ConstPtr& msg)
 {
-   if((position_data.goal_id != msg->goal_id) && !halt) {
+   if(!halt) {
        position_data.goal_x = msg->x;
        position_data.goal_y = msg->y;
        position_data.goal_z = msg->z;
@@ -120,9 +133,42 @@ void goal_callback(const pc_asctec_sim::pc_goal_cmd::ConstPtr& msg)
        position_data.goal_vel_yaw = msg->yaw_vel;
 
        position_data.goal_arrival = false;
+       position_data.waiting = false;
+       position_data.wait_time = msg->wait_time;
        position_data.goal_range = msg->goal_limit;
-       position_data.goal_id = msg->goal_id;      
+       position_data.goal_id = msg->goal_id;  
+      
+       //ROS_INFO("Coordinates: %f, %f, %f", msg->x, msg->y, msg->z);
+       //ROS_INFO("Wait Time: %f", msg->wait_time);    
     }
+}
+
+void timerCallback(const ros::TimerEvent&) {
+   steady = true;
+   ROS_INFO("Steady timer expired!");
+}
+
+void joy_callback(const sensor_msgs::Joy::ConstPtr& msg)
+{
+   if(msg->buttons[0]) {
+      attack = !attack;
+
+      if(attack) {
+         ROS_INFO("Attack on!");     
+      }else {
+	 ROS_INFO("Attack off!");
+      }
+   }else if(msg->buttons[1]) {
+      ROS_INFO_STREAM("Center Landing Quadrotor " + name);
+      position_data.goal_x = 0.0;
+      position_data.goal_y = 0.0;
+      position_data.goal_yaw = 0.0 + 2*M_PI*yaw_counter;
+      position_data.goal_range = 0.01;
+      position_data.goal_arrival = false;
+      position_data.goal_id = "center";
+      position_data.wait_time = 3;
+      halt = true;  
+   }
 }
 
 void center_shutdown_callback(const std_msgs::Empty::ConstPtr& msg)
@@ -135,6 +181,7 @@ void center_shutdown_callback(const std_msgs::Empty::ConstPtr& msg)
    position_data.goal_range = 0.01;
    position_data.goal_arrival = false;
    position_data.goal_id = "center";
+   position_data.wait_time = 3;
    halt = true;
 }
 
@@ -149,7 +196,7 @@ void shutdown_callback(const std_msgs::Empty::ConstPtr& msg)
 
 void land_cmd(struct POS_DATA * position_ptr) {
 
-   if(position_ptr->goal_z > 0.5 && position_ptr->goal_arrival) {
+   if(position_ptr->goal_z > 0.05 && position_ptr->goal_arrival) {
       position_ptr->goal_z -= 0.02;
       position_ptr->goal_range = 0.001;
    }
@@ -265,6 +312,8 @@ int main(int argc, char** argv) {
    
    ros::init(argc, argv, "pos_controller");
    ros::NodeHandle nh;
+   ros::Timer timer_event = nh.createTimer(ros::Duration(1.0), timerCallback, true);
+   timer_event.stop();
 
    string world_frame, quad_frame, name;
    ros::param::get("~world_frame", world_frame);
@@ -288,6 +337,7 @@ int main(int argc, char** argv) {
    pc_goal_cmd = nh.subscribe(name + "/pos_goals", 1, goal_callback);
    shutdown_request = nh.subscribe(name + "/shutdown", 1, shutdown_callback);
    center_shutdown_request = nh.subscribe(name + "/shutdown_center", 1, center_shutdown_callback);
+   joy_call = nh.subscribe("/joy",10,joy_callback);
 
    ros::Rate rate(CONTROL_RATE);
 
@@ -336,6 +386,14 @@ int main(int argc, char** argv) {
       position_ptr->pos_z = transform.getOrigin().z();  
       position_ptr->pos_yaw = tf::getYaw(transform.getRotation()) + 2*M_PI*yaw_counter;
 
+      if(attack) {
+	 if(att_dir) {
+            position_ptr->pos_z = transform.getOrigin().z() + att_off;
+	 }else {
+	    position_ptr->pos_z = transform.getOrigin().z() - att_off;
+	 }
+      }
+
     //Adjust yaw counter
       float yaw_dif = position_ptr->pos_yaw - position_ptr->pos_yaw_past;
       if(abs(yaw_dif) > M_PI) {
@@ -359,7 +417,24 @@ int main(int argc, char** argv) {
 
     //Update controller values
       update_controller(controller_ptr, position_ptr);
-    
+
+      if(attack) {
+	 if(controller_ptr->error_z < 0.2 && !counting) {
+	    counting = true;
+	    timer_event.start();
+
+	 }else if (controller_ptr->error_z >= 0.2 && counting) {
+	    counting = false;
+	    timer_event.stop();
+
+	 }else if(steady) {
+	    steady = false;
+	    counting = false;
+	    att_dir = !att_dir;
+	    timer_event.stop();
+	 }
+      }    
+
     //Check if target goal was accomplished -> update new goal and publish goal confirm  
       goal_arrived(controller_ptr, position_ptr);
 
@@ -369,7 +444,7 @@ int main(int argc, char** argv) {
       if(halt && centered) {
          land_cmd(position_ptr);
       }
-
+  
       ros::spinOnce();
       rate.sleep();
    }

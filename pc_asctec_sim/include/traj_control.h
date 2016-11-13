@@ -94,6 +94,9 @@ typedef struct POS_DATA
   float goal_vel_yaw;
 
   float goal_range;
+  int wait_time;
+  int wait_start;
+  bool waiting;
   bool goal_arrival;
   string goal_id;
 

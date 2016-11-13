@@ -141,6 +141,7 @@ add_executable(asctec_trap_traj src/trap_traj.cpp)
 add_executable(asctec_circle_traj src/circle_traj.cpp)
 add_executable(asctec_ugv_follower src/ugv_follow.cpp)
 add_executable(twin_ugv_follower src/twin_ugv_follow.cpp)
+add_executable(square_follower src/square.cpp)
 
 ## Add cmake target dependencies of the executable
 ## same as for the library above
@@ -149,6 +150,7 @@ add_dependencies(asctec_trap_traj ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_E
 add_dependencies(asctec_circle_traj ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 add_dependencies(asctec_ugv_follower ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 add_dependencies(twin_ugv_follower ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(square_follower ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Specify libraries to link a library or executable target against
 target_link_libraries(pc_asctec_sim_node
@@ -166,7 +168,9 @@ target_link_libraries(asctec_ugv_follower
 target_link_libraries(twin_ugv_follower
   ${catkin_LIBRARIES}
 )
-
+target_link_libraries(square_follower
+  ${catkin_LIBRARIES}
+)
 
 #############
 ## Install ##
