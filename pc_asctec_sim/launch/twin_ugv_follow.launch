@@ -21,7 +21,7 @@
 
   <node name="h1_controller" 
         pkg="pc_asctec_sim" 
-        type="pc_asctec_sim_node" 
+        type="controller_node" 
         output="screen">
 
      <param name="k_p_xy" value="12.0"/>      <!-- 12.0 -->
@@ -44,7 +44,7 @@
 
   <node name="h3_controller" 
         pkg="pc_asctec_sim" 
-        type="pc_asctec_sim_node" 
+        type="controller_node" 
         output="screen">
 
      <param name="k_p_xy" value="12.0"/>      <!-- 12.0 -->

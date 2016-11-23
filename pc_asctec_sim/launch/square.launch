@@ -14,7 +14,7 @@
 
   <node name="asctec_controller" 
         pkg="pc_asctec_sim" 
-        type="pc_asctec_sim_node" 
+        type="controller_node" 
         output="screen">
 
      <rosparam file="$(find pc_asctec_sim)/config/default_h.yaml" command="load"/>

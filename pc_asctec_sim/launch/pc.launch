@@ -14,7 +14,7 @@
   
   <node name="joy_controller" pkg="joy" type="joy_node" output="screen"/>
 
-  <node name="asctec_controller" pkg="pc_asctec_sim" type="pc_asctec_sim_node" output="screen">
+  <node name="asctec_controller" pkg="pc_asctec_sim" type="controller_node" output="screen">
      
      <rosparam file="$(find pc_asctec_sim)/config/default_h.yaml" command="load"/>
      <param name="quad_name" value="hummingbird_1"/>

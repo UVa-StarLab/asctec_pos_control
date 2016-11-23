@@ -11,11 +11,11 @@
 #include <math.h>
 
 #define REAL  1			//define to broadcast to asctec hummingbird quadrotor
-#define DEBUG 0                 //define to broadcast debug messages
+#define DEBUG 1                 //define to broadcast debug messages
 #define CONTROL_RATE 50.0
 #define dt 1/CONTROL_RATE
 #define GOAL_LIMIT 0.01
-#define INTEGRAL_LIMIT 4.0
+#define INTEGRAL_LIMIT 14.0
 #define TRAJ_SIZE 4
 
 #define THRUST_MAX 5.0
@@ -36,45 +36,32 @@ using namespace std;
 
 void init(struct POS_DATA * pos_ptr, 
           struct PID_DATA * ctl_ptr);
-
-void goal_callback(const pc_asctec_sim::pc_goal_cmd::ConstPtr& msg);
-
-bool goal_arrived(struct PID_DATA * pid_ptr, struct POS_DATA * pos_ptr);
-
 void update_controller(struct PID_DATA * controller_ptr, 
                        struct POS_DATA * position_ptr);
-
-void update_sim_cmd(struct PID_DATA * ctl_ptr);
-
 void update_real_cmd(struct PID_DATA * ctl_ptr, struct POS_DATA * pos_ptr);
+void goal_callback(const pc_asctec_sim::pc_goal_cmd::ConstPtr& msg);
+bool goal_arrived(struct PID_DATA * pid_ptr, struct POS_DATA * pos_ptr);
+float limit(float input, float ceiling);
 
 /* --------------- Data Structure Definitions ------------ */
 
 typedef struct PID_DATA
 {
   float error_x;
-  float error_x_past;
+  float error_x_vel;
   float integral_x;
-  float diff_x;
-  float error_accel_x;
 
   float error_y;
-  float error_y_past;
+  float error_y_vel;
   float integral_y;
-  float diff_y;
-  float error_accel_y;
 
   float error_z;
-  float error_z_past;
+  float error_z_vel;
   float integral_z;
-  float diff_z;
-  float error_accel_z;
 
   float error_yaw;
-  float error_yaw_past;
+  float error_yaw_vel;
   float integral_yaw;
-  float diff_yaw;
-  float error_accel_yaw;
 
 } pid_data;
 
@@ -84,6 +71,7 @@ typedef struct POS_DATA
   float pos_y;
   float pos_z;
   float pos_yaw;
+  float relative_yaw;
 
   float pos_x_past;
   float pos_y_past;
@@ -95,27 +83,20 @@ typedef struct POS_DATA
   float vel_z;
   float vel_yaw;
 
-  float vel_x_past;
-  float vel_y_past;
-  float vel_z_past;
-  float vel_yaw_past;
-
-  float accel_x;
-  float accel_y;
-  float accel_z;
-  float accel_yaw;
-
   float goal_x;
   float goal_y;
   float goal_z;
   float goal_yaw;
 
-  float goal_accel_x;
-  float goal_accel_y;
-  float goal_accel_z;
-  float goal_accel_yaw;
+  float goal_vel_x;
+  float goal_vel_y;
+  float goal_vel_z;
+  float goal_vel_yaw;
 
   float goal_range;
+  int wait_time;
+  int wait_start;
+  bool waiting;
   bool goal_arrival;
   string goal_id;
 
