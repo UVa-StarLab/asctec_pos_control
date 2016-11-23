@@ -5,6 +5,7 @@
 #include <pc_asctec_sim/SICmd.h>
 #include <pc_asctec_sim/pc_goal_cmd.h>
 #include <pc_asctec_sim/pc_feedback.h>
+#include <pc_asctec_sim/pc_state.h>
 #include <tf/transform_listener.h>
 #include <tf/transform_datatypes.h>
 #include <string.h>
@@ -49,18 +50,22 @@ typedef struct PID_DATA
 {
   float error_x;
   float error_x_vel;
+  float error_x_acc;
   float integral_x;
 
   float error_y;
   float error_y_vel;
+  float error_y_acc;
   float integral_y;
 
   float error_z;
   float error_z_vel;
+  float error_z_acc;
   float integral_z;
 
   float error_yaw;
   float error_yaw_vel;
+  float error_yaw_acc;
   float integral_yaw;
 
 } pid_data;
@@ -83,6 +88,16 @@ typedef struct POS_DATA
   float vel_z;
   float vel_yaw;
 
+  float vel_x_past;
+  float vel_y_past;
+  float vel_z_past;
+  float vel_yaw_past;
+
+  float acc_x;
+  float acc_y;
+  float acc_z;
+  float acc_yaw;
+
   float goal_x;
   float goal_y;
   float goal_z;
@@ -92,6 +107,11 @@ typedef struct POS_DATA
   float goal_vel_y;
   float goal_vel_z;
   float goal_vel_yaw;
+
+  float goal_acc_x;
+  float goal_acc_y;
+  float goal_acc_z;
+  float goal_acc_yaw;
 
   float goal_range;
   int wait_time;

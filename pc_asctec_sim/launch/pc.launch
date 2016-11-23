@@ -17,9 +17,8 @@
   <node name="asctec_controller" pkg="pc_asctec_sim" type="controller_node" output="screen">
      
      <rosparam file="$(find pc_asctec_sim)/config/default_h.yaml" command="load"/>
-     <param name="quad_name" value="hummingbird_1"/>
+     <param name="quad_frame" value="/hummingbird_1"/>
      <param name="world_frame" value="/odom"/>
-     <param name="quad_frame" value="/vicon/hummingbird_1/hummingbird_1"/>
 
   </node>
 </launch>
