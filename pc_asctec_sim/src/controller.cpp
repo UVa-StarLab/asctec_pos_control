@@ -66,7 +66,7 @@ void init(struct POS_DATA * pos_ptr, struct PID_DATA * ctl_ptr)
 
    pos_ptr->goal_x = 0.0;
    pos_ptr->goal_y = 0.0;
-   pos_ptr->goal_z = 0.7;
+   pos_ptr->goal_z = 0.0;
    pos_ptr->goal_yaw = 0.0;
 
    pos_ptr->goal_vel_x = 0.0;

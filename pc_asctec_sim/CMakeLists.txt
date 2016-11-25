@@ -12,7 +12,9 @@ find_package(catkin REQUIRED COMPONENTS
   tf
   roscpp
   message_generation
+  cmake_modules 
 )
+find_package(Eigen REQUIRED)
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
@@ -53,6 +55,7 @@ add_message_files(
   pc_goal_cmd.msg
   pc_state.msg
   pc_feedback.msg
+  pc_traj_cmd.msg
   SICmd.msg
 )
 
@@ -111,7 +114,7 @@ catkin_package(
   INCLUDE_DIRS include
   LIBRARIES pc_asctec_sim
   CATKIN_DEPENDS geometry_msgs quadrotor_msgs roscpp message_runtime
-  DEPENDS system_lib
+  DEPENDS system_lib Eigen
 )
 
 ###########
@@ -123,6 +126,7 @@ catkin_package(
 include_directories(include)
 include_directories(
   ${catkin_INCLUDE_DIRS}
+  ${Eigen_INCLUDE_DIRS}
 )
 
 ## Declare a C++ library
@@ -162,6 +166,7 @@ target_link_libraries(controller_node
 )
 target_link_libraries(trajectory_node
   ${catkin_LIBRARIES}
+  ${Eigen_LIBRARIES}
 )
 target_link_libraries(asctec_trap_traj
   ${catkin_LIBRARIES}
