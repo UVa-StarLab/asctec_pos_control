@@ -73,7 +73,7 @@ int main(int argc, char** argv) {
 
    ifstream scptfile;
    string line;
-   scptfile.open("/home/bezzo/catkin_ws/src/asctec_pos_control/pc_asctec_sim/scripts/trap.txt");
+   scptfile.open("/home/bezzo/catkin_ws/src/asctec_pos_control/pc_asctec_sim/trajectories/trap.txt");
    int num_points = -1;
 
    ROS_INFO("Opening trajectory file...");
