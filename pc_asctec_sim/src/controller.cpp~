@@ -355,7 +355,7 @@ int main(int argc, char** argv) {
    ros::Timer timer_event = nh.createTimer(ros::Duration(1.0), timerCallback, true);
    timer_event.stop();
 
-   string world_frame, name, frame;
+   string world_frame, name;
    ros::param::get("~world_frame", world_frame);
    ros::param::get("~name", name);
    ros::param::get("~quad_frame", frame);
