@@ -162,7 +162,16 @@ target_link_libraries(trajectory_node
   ${catkin_LIBRARIES}
   ${Eigen_LIBRARIES}
 )
+target_link_libraries(asctec_trap_traj
+  ${catkin_LIBRARIES}
+)
+target_link_libraries(asctec_circle_traj
+  ${catkin_LIBRARIES}
+)
 target_link_libraries(asctec_ugv_follower
+  ${catkin_LIBRARIES}
+)
+target_link_libraries(twin_ugv_follower
   ${catkin_LIBRARIES}
 )
 target_link_libraries(square_follower

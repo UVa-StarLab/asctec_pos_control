@@ -34,7 +34,7 @@
      <param name="name" value="hummingbird_1"/>
      <param name="loop" value="true"/>
      <param name="loop_point" value="2"/>
-     <param name="file" value="snake.txt"/>
+     <param name="file" value="avoid.txt"/>
   </node>
 
 </launch>
