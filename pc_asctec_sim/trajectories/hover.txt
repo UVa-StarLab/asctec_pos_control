@@ -1,0 +1,2 @@
+!wait    T     x    x_v    x_a    y    y_v    y_a     z     z_v     z_a     yaw     yaw_v   yaw_a 
+ 1.0     6.0   0.0  0.0    0.0    0.0  0.0    0.0     0.7   0.0     0.0     0.0     0.0     0.0

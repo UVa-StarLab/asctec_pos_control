@@ -12,7 +12,7 @@
   </node>
 
   <node name="joy_controller" pkg="joy" type="joy_node"/>
--->
+
   <node name="asctec_controller" 
         pkg="pc_asctec_sim" 
         type="controller_node" 
@@ -25,16 +25,21 @@
      <param name="quad_frame" value="/vicon/hummingbird_1/hummingbird_1"/>
 
   </node>
-
+-->
   <node name="trajectory_server" 
         pkg="pc_asctec_sim" 
-        type="trajectory_node" 
+        type="trajectory_real_node" 
         output="screen">
 
      <param name="name" value="hummingbird_1"/>
-     <param name="loop" value="true"/>
-     <param name="loop_point" value="2"/>
-     <param name="file" value="avoid.txt"/>
+  </node>
+
+  <node name="trajectory_tester" 
+        pkg="pc_asctec_sim" 
+        type="trajectory_test" 
+        output="screen">
+
+     <param name="name" value="hummingbird_1"/>
   </node>
 
 </launch>

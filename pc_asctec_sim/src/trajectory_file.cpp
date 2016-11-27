@@ -27,6 +27,9 @@ MatrixXd A(6,6);
 float c_time = 0.0;
 int point_ct;
 
+MatrixXd B2(24,8);
+MatrixXd X2(24,8);
+
 ros::Publisher pos_goal, viz_goal;
 ros::Subscriber goal_feedback, joy_feed, traj_feed, state_feed;
 
