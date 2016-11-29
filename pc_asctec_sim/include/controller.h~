@@ -1,35 +1,43 @@
 #include <ros/ros.h>
-#include <quadrotor_msgs/PositionCommand.h>
+
 #include <geometry_msgs/Vector3.h>
 #include <sensor_msgs/Joy.h>
+
 #include <pc_asctec_sim/SICmd.h>
 #include <pc_asctec_sim/pc_goal_cmd.h>
 #include <pc_asctec_sim/pc_feedback.h>
 #include <pc_asctec_sim/pc_state.h>
+#include <pc_asctec_sim/LLStatus.h>
+#include <pc_asctec_sim/tunerConfig.h>
+
 #include <tf/transform_listener.h>
 #include <tf/transform_datatypes.h>
+
+#include <dynamic_reconfigure/server.h>
+
 #include <string.h>
 #include <math.h>
 
-#define REAL  1			//define to broadcast to asctec hummingbird quadrotor
-#define DEBUG 1                 //define to broadcast debug messages
-#define CONTROL_RATE 50.0
-#define dt 1/CONTROL_RATE
-#define GOAL_LIMIT 0.01
-#define INTEGRAL_LIMIT 14.0
-#define TRAJ_SIZE 4
+#define CONTROL_RATE 20.0
 
-#define THRUST_MAX 5.0
+#define INTEGRAL_LIMIT 5.0
+
+#define THRUST_MAX 100.0
 #define THRUST_MIN 0.0
+#define G_TH 30.0
 
-#define ROLL_MAX 8.0
+#define ROLL_MAX 100.0
 #define ROLL_MIN -ROLL_MAX
 
-#define PITCH_MAX 8.0
+#define PITCH_MAX 100.0
 #define PITCH_MIN -PITCH_MAX
 
-#define YAW_MAX 10.0
+#define YAW_MAX 100.0
 #define YAW_MIN -YAW_MAX
+
+#define BATTERY_FULL 12.35
+#define BATTERY_MID 11.30
+#define BATTERY_EMPTY 10.6
 
 using namespace std;
 

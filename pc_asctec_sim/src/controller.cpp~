@@ -251,10 +251,10 @@ void update_controller(struct PID_DATA * controller_ptr, struct POS_DATA * posit
                                    (position_ptr->acc_yaw);
 
    /* ---- Windup Prevention ---- */
-   controller_ptr->integral_x = limit(controller_ptr->integral_x, INTEGRAL_LIMIT, 0);
-   controller_ptr->integral_y = limit(controller_ptr->integral_y, INTEGRAL_LIMIT, 0);
-   controller_ptr->integral_z = limit(controller_ptr->integral_z, INTEGRAL_LIMIT, 0);
-   controller_ptr->integral_yaw = limit(controller_ptr->integral_yaw, INTEGRAL_LIMIT, 0);
+   controller_ptr->integral_x = limit(controller_ptr->integral_x, INTEGRAL_LIMIT);
+   controller_ptr->integral_y = limit(controller_ptr->integral_y, INTEGRAL_LIMIT);
+   controller_ptr->integral_z = limit(controller_ptr->integral_z, INTEGRAL_LIMIT);
+   controller_ptr->integral_yaw = limit(controller_ptr->integral_yaw, INTEGRAL_LIMIT);
 }
 
 void update_real_cmd(struct PID_DATA * ctl_ptr, struct POS_DATA * pos_ptr)

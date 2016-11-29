@@ -58,7 +58,7 @@ add_message_files(
   pc_feedback.msg
   pc_traj_cmd.msg
   SICmd.msg
-  LLStatus.msg
+  llstatus.msg
 )
 
 ## Generate services in the 'srv' folder

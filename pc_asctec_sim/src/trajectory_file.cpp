@@ -27,9 +27,6 @@ MatrixXd A(6,6);
 float c_time = 0.0;
 int point_ct;
 
-MatrixXd B2(24,8);
-MatrixXd X2(24,8);
-
 ros::Publisher pos_goal, viz_goal;
 ros::Subscriber goal_feedback, joy_feed, traj_feed, state_feed;
 
@@ -117,6 +114,9 @@ int main(int argc, char** argv) {
 	       string temp = "";
 	       int k = j;
 	       while(line[k] != ' ') {
+		  if(line[k] == 'a') {
+		     break;
+		  }
 	          temp += line[k];
 		  k++;
 	       }
@@ -128,7 +128,7 @@ int main(int argc, char** argv) {
 	          B_cur += 2;
 	       }
 	       l_cur++;
-	       if(B_cur == 23) {
+	       if(B_cur == 25) {
 	          j = line.length();
 	       }
 	    }
@@ -151,6 +151,7 @@ int main(int argc, char** argv) {
       B(2*i,0) = 0.0;
    }
 
+   ros::Duration(4.0).sleep();
    ros::spinOnce();
 
    B(0,0) = state_data.x;
@@ -176,9 +177,10 @@ int main(int argc, char** argv) {
    }
    ros::Time t_e = ros::Time::now();
    float t_f = ((t_e - t_s).toNSec());
-   ROS_INFO("Trajectory with %i points calculated. Time of calculation (ns): %f", num_points, t_f);
+   ROS_INFO("Trajectory with %i points calculated. Time of calculation (ms): %f", num_points, t_f/1000000);
 
    point_ct = 0;
+   ROS_INFO("Starting Trajectory!!");
 
    while (ros::ok()) {
       ros::spinOnce();

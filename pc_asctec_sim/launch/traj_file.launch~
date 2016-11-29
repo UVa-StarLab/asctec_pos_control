@@ -4,11 +4,14 @@
   <arg name="name" value="hummingbird_1" />
   <arg name="quad_frame" value="/vicon/hummingbird_1/hummingbird_1" />
   <arg name="world_frame" value="/odom" />
+  <arg name="loop" value="false" />
+  <arg name="loop_point" value="2" />
+  <arg name="file" value="hover.txt" />
+  <arg name="tuning_file" value="default_h.yaml" /> 
 
-<!--
   <include file="$(find vicon_bridge)/launch/vicon.launch" />
 
-  <node pkg="asctec_ll_updated" name="hummingbird_1" type="asctec_ll_updated_node" output="screen" respawn="true">
+  <node pkg="asctec_ll_updated" name="$(arg name)" type="asctec_ll_updated_node" output="screen" respawn="true">
      <param name="port" value="$(arg port)"/>
      <param name="ll_status_rate" value="1"/>
      <param name="imu_calc_data_rate" value="10"/>
@@ -21,31 +24,25 @@
 
   <node name="asctec_controller" 
         pkg="pc_asctec_sim" 
-        type="controller_node" 
-        output="screen">
+        type="controller_node">
 
-     <rosparam file="$(find pc_asctec_sim)/config/default_h.yaml" command="load"/>
+     <rosparam file="$(find pc_asctec_sim)/cfg/$(arg tuning_file)" command="load"/>
 
-     <param name="quad_name" value="$(arg name)"/>
+     <param name="name" value="$(arg name)"/>
      <param name="world_frame" value="$(arg world_frame)"/>
      <param name="quad_frame" value="$(arg quad_frame)"/>
 
   </node>
--->
-  <node name="trajectory_server" 
-        pkg="pc_asctec_sim" 
-        type="trajectory_real_node" 
-        output="screen">
 
-     <param name="name" value="hummingbird_1"/>
-  </node>
-
-  <node name="trajectory_tester" 
+  <node name="waypoint_server" 
         pkg="pc_asctec_sim" 
-        type="trajectory_test" 
+        type="trajectory_file_node" 
         output="screen">
 
      <param name="name" value="$(arg name)"/>
+     <param name="loop" value="$(arg loop)"/>
+     <param name="loop_point" value="$(arg loop_point)"/>
+     <param name="file" value="$(arg file)"/>
   </node>
 
 </launch>
