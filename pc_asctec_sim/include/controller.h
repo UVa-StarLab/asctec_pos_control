@@ -36,8 +36,8 @@
 #define YAW_MIN -YAW_MAX
 
 #define BATTERY_FULL 12.35
-#define BATTERY_MID 11.30
-#define BATTERY_EMPTY 10.9
+#define BATTERY_MID 10.5
+#define BATTERY_EMPTY 9.5
 
 using namespace std;
 

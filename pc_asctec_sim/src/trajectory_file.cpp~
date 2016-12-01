@@ -229,6 +229,8 @@ int main(int argc, char** argv) {
          viz.point.y = goal.y;
          viz.point.z = goal.z;
          viz_goal.publish(viz);
+	 
+	 cout << c_time << endl;
 
          if((c_time + range) >= t_data(1,point_ct)) {
             if(t_data(0,point_ct) != 0.0 && !timing) {

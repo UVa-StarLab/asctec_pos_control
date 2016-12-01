@@ -6,7 +6,7 @@
   <arg name="world_frame" value="/odom" />
   <arg name="loop" value="false" />
   <arg name="loop_point" value="2" />
-  <arg name="file" value="hover.txt" />
+  <arg name="file" value="avoid.txt" />
   <arg name="tuning_file" value="default_h.yaml" /> 
 
   <include file="$(find vicon_bridge)/launch/vicon.launch" />

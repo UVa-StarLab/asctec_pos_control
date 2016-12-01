@@ -58,7 +58,7 @@ add_message_files(
   pc_feedback.msg
   pc_traj_cmd.msg
   SICmd.msg
-  llstatus.msg
+  LLStatus.msg
 )
 
 ## Generate services in the 'srv' folder
@@ -148,6 +148,7 @@ add_executable(asctec_ugv_follower src/ugv_follow.cpp)
 add_executable(square_follower src/square.cpp)
 add_executable(joy_follower src/joy_follow.cpp)
 add_executable(trajectory_test src/trajectory_test.cpp)
+add_executable(land_predict src/predict.cpp)
 
 ## Add cmake target dependencies of the executable
 ## same as for the library above
@@ -159,6 +160,7 @@ add_dependencies(trajectory_test ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EX
 add_dependencies(asctec_ugv_follower ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 add_dependencies(square_follower ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 add_dependencies(joy_follower ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(land_predict ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Specify libraries to link a library or executable target against
 target_link_libraries(controller_node
@@ -182,6 +184,9 @@ target_link_libraries(square_follower
   ${catkin_LIBRARIES}
 )
 target_link_libraries(joy_follower
+  ${catkin_LIBRARIES}
+)
+target_link_libraries(land_predict
   ${catkin_LIBRARIES}
 )
 

@@ -6,7 +6,7 @@
   <arg name="world_frame" value="/odom" />
   <arg name="loop" value="false" />
   <arg name="loop_point" value="2" />
-  <arg name="file" value="hover.txt" />
+  <arg name="file" value="trap.txt" />
   <arg name="tuning_file" value="default_h.yaml" /> 
 
   <include file="$(find vicon_bridge)/launch/vicon.launch" />
@@ -24,7 +24,8 @@
 
   <node name="asctec_controller" 
         pkg="pc_asctec_sim" 
-        type="controller_node">
+        type="controller_node"
+	output="screen">
 
      <rosparam file="$(find pc_asctec_sim)/cfg/$(arg tuning_file)" command="load"/>
 

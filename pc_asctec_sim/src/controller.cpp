@@ -225,10 +225,10 @@ void update_controller(struct PID_DATA * controller_ptr, struct POS_DATA * posit
    controller_ptr->error_yaw = (position_ptr->goal_yaw) - (position_ptr->pos_yaw);
 
    /* ---- I calculation ---- */
-   controller_ptr->integral_x += (controller_ptr->error_x) * (dt / pow(10,9));
-   controller_ptr->integral_y += (controller_ptr->error_y) * (dt / pow(10,9));
-   controller_ptr->integral_z += (controller_ptr->error_z) * (dt / pow(10,9));
-   controller_ptr->integral_yaw += (controller_ptr->error_yaw) * (dt / pow(10,9));
+   controller_ptr->integral_x += (controller_ptr->error_x) * dt;
+   controller_ptr->integral_y += (controller_ptr->error_y) * dt;
+   controller_ptr->integral_z += (controller_ptr->error_z) * dt;
+   controller_ptr->integral_yaw += (controller_ptr->error_yaw) * dt;
 
    /* ---- Vel calculation ---- */
    controller_ptr->error_x_vel = (position_ptr->goal_vel_x) - 
@@ -259,10 +259,10 @@ void update_controller(struct PID_DATA * controller_ptr, struct POS_DATA * posit
 
 void update_real_cmd(struct PID_DATA * ctl_ptr, struct POS_DATA * pos_ptr)
 {
-   float roll;
-   float pitch;
-   float thrust;
-   float yaw;
+   double roll;
+   double pitch;
+   double thrust;
+   double yaw;
 
    yaw = -(k_p_yaw * (ctl_ptr->error_yaw) + 
            k_i_yaw * (ctl_ptr->integral_yaw) + 
@@ -274,7 +274,7 @@ void update_real_cmd(struct PID_DATA * ctl_ptr, struct POS_DATA * pos_ptr)
    if(!isnan(M_PI * (yaw / YAW_MAX))) {
       real_cmd.yaw = M_PI * (yaw / YAW_MAX);
    }else {
-      ROS_INFO("Yaw calculation yielded nan");
+      //ROS_INFO("Yaw calculation yielded nan");
    }
 
    pitch = -((k_p_xy * (ctl_ptr->error_x) + 
@@ -294,7 +294,7 @@ void update_real_cmd(struct PID_DATA * ctl_ptr, struct POS_DATA * pos_ptr)
    if(!isnan(M_PI * (pitch / PITCH_MAX) / 12)) {
       real_cmd.pitch = M_PI * (pitch / PITCH_MAX) / 12;
    }else {
-      ROS_INFO("Pitch calculation yielded nan");
+      //ROS_INFO("Pitch calculation yielded nan");
    }
 
    roll = ((k_p_xy * (ctl_ptr->error_x) + 
@@ -314,7 +314,7 @@ void update_real_cmd(struct PID_DATA * ctl_ptr, struct POS_DATA * pos_ptr)
    if(!isnan(M_PI * (roll / ROLL_MAX) / 12)) {
       real_cmd.roll = M_PI * (roll / ROLL_MAX) / 12;
    }else {
-      ROS_INFO("Roll calculation yielded nan");
+      //ROS_INFO("Roll calculation yielded nan");
    }
 
    thrust = k_p_z * (ctl_ptr->error_z) + 
@@ -327,7 +327,7 @@ void update_real_cmd(struct PID_DATA * ctl_ptr, struct POS_DATA * pos_ptr)
    if(!isnan(thrust / THRUST_MAX)) {
       real_cmd.thrust = thrust / THRUST_MAX;
    }else {
-      ROS_INFO("Thrust calculation yielded nan");
+      //ROS_INFO("Thrust calculation yielded nan");
    }
 }
 
@@ -382,7 +382,7 @@ int main(int argc, char** argv) {
    POS_DATA * position_ptr = &position_data;
 
    init(position_ptr, controller_ptr);
-   ros::Duration(1.0).sleep();
+   ros::Duration(1.5).sleep();
    listener.waitForTransform(world_frame, frame, 
                              ros::Time(0), ros::Duration(3.0));
    ros::spinOnce();
@@ -418,7 +418,7 @@ int main(int argc, char** argv) {
     //Grab new transform data
       listener.lookupTransform(world_frame, frame, ros::Time(0), transform);
       now = transform.stamp_;
-      dt = now.toSec()*pow(10,9) + now.toNSec() - past.toSec()*pow(10,9) + past.toNSec();
+      dt = (now.toSec() - past.toSec()) + (now.toNSec() - past.toNSec())/pow(10,9);
 
     //Set t-1 values
       position_ptr->pos_x_past = position_ptr->pos_x;
@@ -463,16 +463,16 @@ int main(int argc, char** argv) {
       }
 
     //Calculate velocity values
-      position_ptr->vel_x = (((position_ptr->pos_x) - (position_ptr->pos_x_past)) / (dt / pow(10,9)));
-      position_ptr->vel_y = (((position_ptr->pos_y) - (position_ptr->pos_y_past)) / (dt / pow(10,9)));
-      position_ptr->vel_z = (((position_ptr->pos_z) - (position_ptr->pos_z_past)) / (dt / pow(10,9)));
-      position_ptr->vel_yaw = (((position_ptr->pos_yaw) - (position_ptr->pos_yaw_past)) / (dt / pow(10,9)));
+      position_ptr->vel_x = ((position_ptr->pos_x) - (position_ptr->pos_x_past)) / dt;
+      position_ptr->vel_y = ((position_ptr->pos_y) - (position_ptr->pos_y_past)) / dt;
+      position_ptr->vel_z = ((position_ptr->pos_z) - (position_ptr->pos_z_past)) / dt;
+      position_ptr->vel_yaw = ((position_ptr->pos_yaw) - (position_ptr->pos_yaw_past)) / dt;
 
     //Calculate accel values
-      position_ptr->acc_x = (((position_ptr->vel_x) - (position_ptr->vel_x_past)) / (dt / pow(10,9)));
-      position_ptr->acc_y = (((position_ptr->vel_y) - (position_ptr->vel_y_past)) / (dt / pow(10,9)));
-      position_ptr->acc_z = (((position_ptr->vel_z) - (position_ptr->vel_z_past)) / (dt / pow(10,9)));
-      position_ptr->acc_yaw = (((position_ptr->vel_yaw) - (position_ptr->vel_yaw_past)) / (dt / pow(10,9)));
+      position_ptr->acc_x = ((position_ptr->vel_x) - (position_ptr->vel_x_past)) / dt;
+      position_ptr->acc_y = ((position_ptr->vel_y) - (position_ptr->vel_y_past)) / dt;
+      position_ptr->acc_z = ((position_ptr->vel_z) - (position_ptr->vel_z_past)) / dt;
+      position_ptr->acc_yaw = ((position_ptr->vel_yaw) - (position_ptr->vel_yaw_past)) / dt;
 
     //Update controller values
       update_controller(controller_ptr, position_ptr);
@@ -502,7 +502,7 @@ int main(int argc, char** argv) {
       accel_quad_cmd.publish(real_cmd);
 
     //Fill State Data and Publish
-      state_data.event = ros::Time::now();
+      state_data.event = now;
 
       state_data.x = position_ptr->pos_x;
       state_data.x_vel = position_ptr->vel_x;

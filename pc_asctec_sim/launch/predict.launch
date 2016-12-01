@@ -1,0 +1,14 @@
+<launch>
+  <include file="$(find vicon_bridge)/launch/vicon.launch" />
+
+  <node name="predict" 
+        pkg="pc_asctec_sim" 
+        type="land_predict" 
+        output="screen">
+
+     <param name="name" value="/hummingbird_1"/>
+     <param name="land_frame" value="/vicon/turtlebot_8/turtlebot_8"/>
+     <param name="world_frame" value="/odom"/>
+  </node>
+
+</launch>

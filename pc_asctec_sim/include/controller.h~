@@ -37,7 +37,7 @@
 
 #define BATTERY_FULL 12.35
 #define BATTERY_MID 11.30
-#define BATTERY_EMPTY 10.6
+#define BATTERY_EMPTY 10.9
 
 using namespace std;
 
