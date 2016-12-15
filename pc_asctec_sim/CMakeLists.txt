@@ -144,11 +144,8 @@ include_directories(
 add_executable(controller_node src/controller.cpp)
 add_executable(trajectory_file_node src/trajectory_file.cpp)
 add_executable(trajectory_real_node src/trajectory_real.cpp)
-add_executable(asctec_ugv_follower src/ugv_follow.cpp)
-add_executable(square_follower src/square.cpp)
+add_executable(ugv_tracker src/ugv_track.cpp)
 add_executable(joy_follower src/joy_follow.cpp)
-add_executable(trajectory_test src/trajectory_test.cpp)
-add_executable(land_predict src/predict.cpp)
 
 ## Add cmake target dependencies of the executable
 ## same as for the library above
@@ -156,11 +153,8 @@ add_dependencies(controller_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EX
 add_dependencies(controller_node ${${PROJECT_NAME}_gencfg} ${catkin_EXPORTED_TARGETS})
 add_dependencies(trajectory_file_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 add_dependencies(trajectory_real_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-add_dependencies(trajectory_test ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-add_dependencies(asctec_ugv_follower ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-add_dependencies(square_follower ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(ugv_tracker ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 add_dependencies(joy_follower ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-add_dependencies(land_predict ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Specify libraries to link a library or executable target against
 target_link_libraries(controller_node
@@ -174,19 +168,10 @@ target_link_libraries(trajectory_real_node
   ${catkin_LIBRARIES}
   ${Eigen_LIBRARIES}
 )
-target_link_libraries(trajectory_test
-  ${catkin_LIBRARIES}
-)
-target_link_libraries(asctec_ugv_follower
-  ${catkin_LIBRARIES}
-)
-target_link_libraries(square_follower
+target_link_libraries(ugv_tracker
   ${catkin_LIBRARIES}
 )
 target_link_libraries(joy_follower
-  ${catkin_LIBRARIES}
-)
-target_link_libraries(land_predict
   ${catkin_LIBRARIES}
 )
 

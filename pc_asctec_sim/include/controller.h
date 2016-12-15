@@ -1,7 +1,10 @@
 #include <ros/ros.h>
 
+#include <std_msgs/Bool.h>
+
 #include <geometry_msgs/Vector3.h>
 #include <sensor_msgs/Joy.h>
+#include <visualization_msgs/Marker.h>
 
 #include <pc_asctec_sim/SICmd.h>
 #include <pc_asctec_sim/pc_goal_cmd.h>
@@ -18,7 +21,7 @@
 #include <string.h>
 #include <math.h>
 
-#define CONTROL_RATE 20.0
+#define CONTROL_RATE 50.0
 
 #define INTEGRAL_LIMIT 5.0
 
@@ -105,6 +108,16 @@ typedef struct POS_DATA
   float acc_y;
   float acc_z;
   float acc_yaw;
+
+  int acc_x_now;
+  int acc_y_now;
+  int acc_z_now;
+  int acc_yaw_now;
+
+  float acc_x_buf[16];
+  float acc_y_buf[16];
+  float acc_z_buf[16];
+  float acc_yaw_buf[16];
 
   float goal_x;
   float goal_y;

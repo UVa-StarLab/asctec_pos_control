@@ -8,6 +8,7 @@
 #include <pc_asctec_sim/pc_feedback.h>
 #include <pc_asctec_sim/pc_traj_cmd.h>
 #include <pc_asctec_sim/pc_state.h>
+#include <visualization_msgs/Marker.h>
 #include <math.h>
 #include <string.h>
 #include <iostream>
@@ -34,10 +35,14 @@ double range = 0.0001;
 int point_ct = 0;
 int max_point = 0;
 
-ros::Publisher pos_goal, traj_goal, viz_goal;
+string quad_name, world;
+
+ros::Publisher pos_goal, traj_goal, viz_goal, trail_pub;
 ros::Subscriber goal_feedback, joy_feed, traj_feed, state_feed;
 
 pc_asctec_sim::pc_state state_data;
+
+visualization_msgs::Marker trail;
 
 void init_A(void)
 {
@@ -61,7 +66,39 @@ void calc_A(float time)
 	}
 }
 
+void init_trail(void)
+{
+	trail.header.frame_id = world;
+	trail.header.stamp = ros::Time::now();
+	trail.id = 2;
+	trail.action = visualization_msgs::Marker::ADD;
+	trail.type = visualization_msgs::Marker::LINE_LIST;
+	trail.color.a = 1.0;
+	trail.color.g = 1.0;				
+	trail.color.b = 1.0;
 
+	trail.scale.x = 0.05;
+	trail.scale.y = 0.05;
+
+	geometry_msgs::Point vis_trail;
+	vis_trail.x = state_data.x;
+	vis_trail.y = state_data.y;
+	vis_trail.z = state_data.z;
+
+	trail.points.push_back(vis_trail);
+}
+
+void publish_trail(float x, float y, float z)
+{
+	geometry_msgs::Point vis_trail;
+	vis_trail.x = x;
+	vis_trail.y = y;
+	vis_trail.z = z;
+
+	trail.points.push_back(vis_trail);
+	trail_pub.publish(trail);
+	trail.points.push_back(vis_trail);
+}
 
 void timerCallback(const ros::TimerEvent&) {
 	ROS_INFO("Point %i timer expired", point_ct);
@@ -154,17 +191,19 @@ int main(int argc, char** argv) {
 	ros::Timer timer_event = nh.createTimer(ros::Duration(3.0), timerCallback, true);
 	timer_event.stop();
 
-	string quad_name;
 	ros::param::get("~name", quad_name);
-
+	ros::param::get("~world", world);
 	pos_goal = nh.advertise<pc_asctec_sim::pc_goal_cmd>(quad_name + "/pos_goals", 10);
 	viz_goal = nh.advertise<geometry_msgs::PointStamped>(quad_name + "/viz_goals",10);
+	trail_pub = nh.advertise<visualization_msgs::Marker>(quad_name + "/trajectory_trail",10);
+
 	traj_goal = nh.advertise<std_msgs::Empty>(quad_name + "/traj_end",10);
 	state_feed = nh.subscribe(quad_name + "/state", 10, state_callback);
 	traj_feed = nh.subscribe(quad_name + "/traj_points", 10, traj_callback);
 	ros::Rate rate(freq);
 
 	init_A();
+	init_trail();
 	while (ros::ok()) {
 		ros::spinOnce();
 		if(point_ct == max_point && !waiting) {
@@ -209,6 +248,7 @@ int main(int argc, char** argv) {
 			viz.point.y = goal.y;
 			viz.point.z = goal.z;
 
+			publish_trail(goal.x, goal.y, goal.z);
 			pos_goal.publish(goal);
 			viz_goal.publish(viz);
 

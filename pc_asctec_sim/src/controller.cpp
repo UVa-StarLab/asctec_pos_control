@@ -18,6 +18,9 @@ float k_p_xy, k_i_xy, k_d_xy, k_a_xy;
 float k_p_z, k_i_z, k_d_z, k_a_z;
 float k_p_yaw, k_i_yaw, k_d_yaw, k_a_yaw;
 
+bool started = false;
+bool halting = false;
+
 bool attack = false;
 bool att_dir = true;
 float att_off = 0.2;
@@ -26,10 +29,27 @@ bool counting = false;
 
 float final_x, final_y, final_z, final_yaw;
 int yaw_counter = 0;
-string name;
 
-ros::Publisher goal_feedback, accel_quad_cmd, state_pub;
-ros::Subscriber pc_goal_cmd, joy_call, bat_sub;
+ros::Publisher goal_feedback, accel_quad_cmd, state_pub, trail_pub;
+ros::Subscriber pc_goal_cmd, joy_call, bat_sub, start_sub;
+visualization_msgs::Marker trail;
+
+void start_motors(bool starter)
+{
+	pc_asctec_sim::SICmd temp;
+	temp.cmd[0] = true;
+	temp.cmd[1] = true;
+	temp.cmd[2] = true;
+	temp.cmd[3] = true;
+	temp.yaw = -M_PI;
+
+	if(started != starter) {
+		accel_quad_cmd.publish(temp);
+		if(started) {
+			halting = true;
+		}
+	}
+}
 
 void init(struct POS_DATA * pos_ptr, struct PID_DATA * ctl_ptr)
 {
@@ -75,6 +95,18 @@ void init(struct POS_DATA * pos_ptr, struct PID_DATA * ctl_ptr)
    pos_ptr->goal_vel_y = 0.0;
    pos_ptr->goal_vel_z = 0.0;
    pos_ptr->goal_vel_yaw = 0.0;
+
+   pos_ptr->acc_x_now = 0;
+   pos_ptr->acc_y_now = 0;
+   pos_ptr->acc_z_now = 0;
+   pos_ptr->acc_yaw_now = 0;
+
+   for(int i = 0; i < 8; i++) {
+      pos_ptr->acc_x_buf[i] = 0;
+      pos_ptr->acc_y_buf[i] = 0;
+      pos_ptr->acc_z_buf[i] = 0;
+      pos_ptr->acc_yaw_buf[i] = 0;
+   }
 
    pos_ptr->goal_range = 0.05;
    pos_ptr->wait_time = 0.0;
@@ -139,7 +171,7 @@ void check_bat(void) {
 	}
 }
 
-void callback(pc_asctec_sim::tunerConfig &config, uint32_t level) {
+void callback(const pc_asctec_sim::tunerConfig &config, uint32_t level) {
 
 	k_p_xy = config.k_p_xy;
 	k_i_xy = config.k_i_xy;
@@ -159,7 +191,7 @@ void callback(pc_asctec_sim::tunerConfig &config, uint32_t level) {
 
 void goal_callback(const pc_asctec_sim::pc_goal_cmd::ConstPtr& msg)
 {
-
+   if(started) {
        position_data.goal_x = msg->x;
        position_data.goal_y = msg->y;
        position_data.goal_z = msg->z;
@@ -180,12 +212,22 @@ void goal_callback(const pc_asctec_sim::pc_goal_cmd::ConstPtr& msg)
 
        position_data.wait_time = msg->wait_time;
        position_data.goal_range = msg->goal_limit;
-       position_data.goal_id = msg->goal_id;    
+       position_data.goal_id = msg->goal_id;  
+   }  
+}
+
+void startCallback(const std_msgs::Bool::ConstPtr& msg)
+{
+	start_motors(msg->data);
 }
 
 void ll_callback(const pc_asctec_sim::LLStatus::ConstPtr& msg)
 {
    battery = msg->battery_voltage;
+   started = msg->flying;
+   if(!started) {
+	halting = false;
+   }
 }
 
 void timerCallback(const ros::TimerEvent&) {
@@ -273,8 +315,6 @@ void update_real_cmd(struct PID_DATA * ctl_ptr, struct POS_DATA * pos_ptr)
    
    if(!isnan(M_PI * (yaw / YAW_MAX))) {
       real_cmd.yaw = M_PI * (yaw / YAW_MAX);
-   }else {
-      //ROS_INFO("Yaw calculation yielded nan");
    }
 
    pitch = -((k_p_xy * (ctl_ptr->error_x) + 
@@ -293,8 +333,6 @@ void update_real_cmd(struct PID_DATA * ctl_ptr, struct POS_DATA * pos_ptr)
 
    if(!isnan(M_PI * (pitch / PITCH_MAX) / 12)) {
       real_cmd.pitch = M_PI * (pitch / PITCH_MAX) / 12;
-   }else {
-      //ROS_INFO("Pitch calculation yielded nan");
    }
 
    roll = ((k_p_xy * (ctl_ptr->error_x) + 
@@ -313,8 +351,6 @@ void update_real_cmd(struct PID_DATA * ctl_ptr, struct POS_DATA * pos_ptr)
 
    if(!isnan(M_PI * (roll / ROLL_MAX) / 12)) {
       real_cmd.roll = M_PI * (roll / ROLL_MAX) / 12;
-   }else {
-      //ROS_INFO("Roll calculation yielded nan");
    }
 
    thrust = k_p_z * (ctl_ptr->error_z) + 
@@ -326,9 +362,58 @@ void update_real_cmd(struct PID_DATA * ctl_ptr, struct POS_DATA * pos_ptr)
 
    if(!isnan(thrust / THRUST_MAX)) {
       real_cmd.thrust = thrust / THRUST_MAX;
-   }else {
-      //ROS_INFO("Thrust calculation yielded nan");
    }
+}
+
+void setAvgAccel(struct POS_DATA * pos_ptr)
+{
+   float tempx, tempy, tempz, tempyaw;
+   tempx = tempy = tempz = tempyaw = 0.0;
+
+   for(int i = 0; i < 8; i++) {
+      tempx += pos_ptr->acc_x_buf[i];
+      tempy += pos_ptr->acc_y_buf[i];
+      tempz += pos_ptr->acc_z_buf[i];
+      tempyaw += pos_ptr->acc_yaw_buf[i];
+   }
+
+   pos_ptr->acc_x = tempx / 8;
+   pos_ptr->acc_y = tempy / 8;
+   pos_ptr->acc_z = tempz / 8;
+   pos_ptr->acc_yaw = tempyaw / 8;
+}
+
+void publish_trail(float x, float y, float z)
+{
+	geometry_msgs::Point vis_trail;
+	vis_trail.x = x;
+	vis_trail.y = y;
+	vis_trail.z = z;
+
+	trail.points.push_back(vis_trail);
+	trail_pub.publish(trail);
+	trail.points.push_back(vis_trail);
+}
+
+void init_trail(string str_frame)
+{
+	trail.header.frame_id = str_frame;
+	trail.header.stamp = ros::Time::now();
+	trail.id = 2;
+	trail.action = visualization_msgs::Marker::ADD;
+	trail.type = visualization_msgs::Marker::LINE_LIST;
+	trail.color.a = 1.0;				
+	trail.color.b = 1.0;
+	trail.color.g = 0.7;
+
+	trail.scale.x = 0.05;
+	trail.scale.y = 0.05;
+
+	geometry_msgs::Point vis_trail;
+	vis_trail.x = position_data.pos_x;
+	vis_trail.y = position_data.pos_y;
+	vis_trail.z = position_data.pos_z;
+	trail.points.push_back(vis_trail);
 }
 
 int main(int argc, char** argv) {
@@ -346,7 +431,7 @@ int main(int argc, char** argv) {
    ros::Timer timer_event = nh.createTimer(ros::Duration(1.0), timerCallback, true);
    timer_event.stop();
 
-   string world_frame, name, frame;
+   string name, world_frame, frame;
    ros::param::get("~world_frame", world_frame);
    ros::param::get("~name", name);
    ros::param::get("~quad_frame", frame);
@@ -369,10 +454,12 @@ int main(int argc, char** argv) {
    accel_quad_cmd = nh.advertise<pc_asctec_sim::SICmd>(name + "/cmd_si", 10);
    goal_feedback = nh.advertise<pc_asctec_sim::pc_feedback>(name + "/goal_feedback", 10);
    state_pub = nh.advertise<pc_asctec_sim::pc_state>(name + "/state", 10);
+   trail_pub = nh.advertise<visualization_msgs::Marker>(name + "/quad_trail",10);
 
    pc_goal_cmd = nh.subscribe(name + "/pos_goals", 1, goal_callback);
-   joy_call = nh.subscribe("/joy",10,joy_callback);
+   //joy_call = nh.subscribe("/joy",10,joy_callback);
    bat_sub = nh.subscribe(name + "/ll_status", 1, ll_callback);
+   start_sub = nh.subscribe(name + "/start_motors", 1, startCallback);
    ros::Rate rate(CONTROL_RATE);
 
    tf::StampedTransform transform;
@@ -382,6 +469,7 @@ int main(int argc, char** argv) {
    POS_DATA * position_ptr = &position_data;
 
    init(position_ptr, controller_ptr);
+   init_trail(world_frame);
    ros::Duration(1.5).sleep();
    listener.waitForTransform(world_frame, frame, 
                              ros::Time(0), ros::Duration(3.0));
@@ -469,10 +557,22 @@ int main(int argc, char** argv) {
       position_ptr->vel_yaw = ((position_ptr->pos_yaw) - (position_ptr->pos_yaw_past)) / dt;
 
     //Calculate accel values
-      position_ptr->acc_x = ((position_ptr->vel_x) - (position_ptr->vel_x_past)) / dt;
-      position_ptr->acc_y = ((position_ptr->vel_y) - (position_ptr->vel_y_past)) / dt;
-      position_ptr->acc_z = ((position_ptr->vel_z) - (position_ptr->vel_z_past)) / dt;
-      position_ptr->acc_yaw = ((position_ptr->vel_yaw) - (position_ptr->vel_yaw_past)) / dt;
+      position_ptr->acc_x_buf[position_ptr->acc_x_now] = ((position_ptr->vel_x) - (position_ptr->vel_x_past)) / dt;
+      position_ptr->acc_y_buf[position_ptr->acc_y_now] = ((position_ptr->vel_y) - (position_ptr->vel_y_past)) / dt;
+      position_ptr->acc_z_buf[position_ptr->acc_z_now] = ((position_ptr->vel_z) - (position_ptr->vel_z_past)) / dt;
+      position_ptr->acc_yaw_buf[position_ptr->acc_yaw_now] = ((position_ptr->vel_yaw) - (position_ptr->vel_yaw_past)) / dt;
+
+      position_ptr->acc_x_now++;
+      position_ptr->acc_y_now++;
+      position_ptr->acc_z_now++;
+      position_ptr->acc_yaw_now++;
+
+      position_ptr->acc_x_now &= 7;
+      position_ptr->acc_y_now &= 7;
+      position_ptr->acc_z_now &= 7;
+      position_ptr->acc_yaw_now &= 7;   
+
+      setAvgAccel(position_ptr);
 
     //Update controller values
       update_controller(controller_ptr, position_ptr);
@@ -498,8 +598,14 @@ int main(int argc, char** argv) {
     //Check if target goal was accomplished -> update new goal and publish goal confirm  
       goal_arrived(controller_ptr, position_ptr);
 
-      update_real_cmd(controller_ptr, position_ptr);
-      accel_quad_cmd.publish(real_cmd);
+      if(started && !halting) {
+           update_real_cmd(controller_ptr, position_ptr);
+           accel_quad_cmd.publish(real_cmd);
+      }else {
+	   position_ptr->goal_z =-0.1;
+      }
+    //Publish trail
+      publish_trail(position_ptr->pos_x, position_ptr->pos_y, position_ptr->pos_z);
 
     //Fill State Data and Publish
       state_data.event = now;
