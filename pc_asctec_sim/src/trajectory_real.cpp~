@@ -15,7 +15,7 @@
 #include <fstream>
 #include <Eigen/Dense>
 
-#define freq 20.0
+#define freq 10.0
 #define dt 1/freq
 
 using namespace std;
