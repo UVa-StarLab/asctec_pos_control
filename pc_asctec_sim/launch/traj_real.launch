@@ -12,7 +12,7 @@
   <!-- Vicon connection node -->
   <include file="$(find vicon_bridge)/launch/vicon.launch" />
 
-  <!-- Asctec Position Controller for Hummingbird -->
+  <!-- Asctec TRPY Controller -->
   <node pkg="asctec_ll_updated" name="$(arg name)" type="asctec_ll_updated_node" output="screen" respawn="true">
      <param name="port" value="$(arg port)"/>
      <param name="ll_status_rate" value="1"/>
@@ -22,8 +22,7 @@
      <param name="gps_data_advanced_rate" value="0"/>
   </node>
 
-  <node name="joy_controller" pkg="joy" type="joy_node" output="screen"/>
-
+  <!-- Asctec Position Controller -->
   <node name="asctec_controller" pkg="pc_asctec_sim" type="controller_node" output="screen">
      <rosparam file="$(find pc_asctec_sim)/cfg/$(arg tuning_file)" command="load"/>
 
@@ -33,6 +32,7 @@
 
   </node>
 
+  <!-- Trajectory Generator -->
   <node name="waypoint_server" 
         pkg="pc_asctec_sim" 
         type="trajectory_real_node" 

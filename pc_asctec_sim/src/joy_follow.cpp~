@@ -64,16 +64,16 @@ void joyCallback(const sensor_msgs::Joy::ConstPtr& msg)
 		starter = true;
 
 	}else if(msg->buttons[5]) {
-		joy_yaw = YW_GAIN * msg->axes[0];
-		joy_x = X_GAIN * msg->axes[4];
-		joy_y = Y_GAIN * msg->axes[3];
-		joy_z = Z_GAIN * msg->axes[1];
+		msg_yaw = YW_GAIN * msg->axes[0];
+		msg_x = X_GAIN * msg->axes[4];
+		msg_y = Y_GAIN * msg->axes[3];
+		msg_z = Z_GAIN * msg->axes[1];
 
 	}else if(msg->buttons[4]) {
-		joy_x = X_GAIN * msg->axes[4];
-		joy_y = Y_GAIN * msg->axes[3];	
-		joy_z = 0.0;
-		joy_yaw = 0.0;
+		msg_x = X_GAIN * msg->axes[4];
+		msg_y = Y_GAIN * msg->axes[3];	
+		msg_z = 0.0;
+		msg_yaw = 0.0;
 	}
 }
 

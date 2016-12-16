@@ -1,14 +1,14 @@
-k_p_xy:   580.0
+k_p_xy:   740.0
 k_i_xy:   70.0
-k_d_xy:   406.0
-k_a_xy:   45.0
+k_d_xy:   560.0
+k_a_xy:   42.0
 
-k_p_z:    80.0
+k_p_z:    100.0
 k_i_z:    25.0
-k_d_z:    25.0
-k_a_z:    5.0
+k_d_z:    35.0
+k_a_z:    3.0
 
-k_p_yaw:  10.0
+k_p_yaw:  20.0
 k_i_yaw:  1.0
-k_d_yaw:  1.0
+k_d_yaw:  5.0
 k_a_yaw:  0.0
