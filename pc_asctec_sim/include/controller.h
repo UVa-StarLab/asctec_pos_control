@@ -22,13 +22,15 @@
 #include <math.h>
 
 #define CONTROL_RATE 50.0
+#define BUFFER 16
 
 #define INTEGRAL_LIMIT 5.0
 
 #define THRUST_MAX 100.0
 #define THRUST_MIN 0.0
 #define G_TH 30.0
-
+#define G 9.81
+#define MASS 0.7 //in kg
 #define ROLL_MAX 100.0
 #define ROLL_MIN -ROLL_MAX
 
@@ -114,10 +116,10 @@ typedef struct POS_DATA
   int acc_z_now;
   int acc_yaw_now;
 
-  float acc_x_buf[16];
-  float acc_y_buf[16];
-  float acc_z_buf[16];
-  float acc_yaw_buf[16];
+  float acc_x_buf[BUFFER];
+  float acc_y_buf[BUFFER];
+  float acc_z_buf[BUFFER];
+  float acc_yaw_buf[BUFFER];
 
   float goal_x;
   float goal_y;

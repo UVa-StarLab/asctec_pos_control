@@ -32,10 +32,9 @@ using namespace std;
 
 int state = 0;
 string count = "a";
-bool tracking = false;
 bool flying = false;
+bool tracking = false;
 bool isDone = true;
-bool starter = false;
 
 float quad_x, quad_y, quad_z;
 float joy_x, joy_y, joy_z, joy_yaw;
@@ -51,25 +50,19 @@ void trajCallback(const std_msgs::Empty::ConstPtr& msg)
 
 void joyCallback(const sensor_msgs::Joy::ConstPtr& msg)
 {
-	if(msg->buttons[0] && !flying) {
-		flying = true;
-
-	}else if(msg->buttons[1] && flying) {	
-		flying = false;
-
-	}else if(msg->buttons[2] && flying) {
+	if(msg->buttons[2] && (state == 2 || state == 3)) {
 		tracking = !tracking;
 
-	}else if(msg->buttons[3] && state == 0) {
-		starter = true;
+	}else if(msg->buttons[3] && (state == 0 || state == 2)) {
+		flying = !flying;
 
-	}else if(msg->buttons[5]) {
+	}else if(msg->buttons[5] && state == 3) {
 		joy_yaw = YW_GAIN * msg->axes[0];
 		joy_x = X_GAIN * msg->axes[4];
 		joy_y = Y_GAIN * msg->axes[3];
 		joy_z = Z_GAIN * msg->axes[1];
 
-	}else if(msg->buttons[4]) {
+	}else if(msg->buttons[4] && state == 3) {
 		joy_x = X_GAIN * msg->axes[4];
 		joy_y = Y_GAIN * msg->axes[3];	
 		joy_z = 0.0;
@@ -225,7 +218,6 @@ int main(int argc, char** argv) {
 	traj_pub = nh.advertise<pc_asctec_sim::pc_traj_cmd>(quad_name + "/traj_points", 10);
 	pos_pub = nh.advertise<pc_asctec_sim::pc_goal_cmd>(quad_name + "/pos_goals", 10);
 	border_pub = nh.advertise<visualization_msgs::Marker>(quad_name + "/border", 10);
-	start_pub = nh.advertise<std_msgs::Bool>(quad_name + "/start_motors", 10);
 
 	traj_sub = nh.subscribe(quad_name + "/traj_end", 10, trajCallback);
 	joy_sub = nh.subscribe("/joy", 10, joyCallback);
@@ -245,29 +237,24 @@ int main(int argc, char** argv) {
 		show_border(outBorder());
 
 		switch(state) {
-			case -1:
-				//Check exit conditions
-				if(isDone) {
-					std_msgs::Bool go;
-					go.data = false;
-					start_pub.publish(go);
-					starter = false;
-					state = 0;
-				}
-				break;
 			case 0:
+				/* Basic waiting state, waits for start signal from controller
+				*  Input: bool flying
+				*/
+
 				//Check exit conditions
-				if(starter) {
-					std_msgs::Bool go;
-					go.data = true;
-					start_pub.publish(go);
-					state = 1;			
+				if(flying && isDone) {
+					state = 1;
 				}
 				break;
 
 			case 1:
+				/* Fly to Hovering at 0, 0, 1
+				*  Input: state change
+				*/
+
 				//Check exit conditions
-				if(flying && isDone) {
+				if(isDone) {
 					float tTravel = sqrt(pow(quad_x,2) + pow(quad_y,2) + pow((1 - quad_z),2)) / maxV;
 					tTravel = limit(tTravel, 10, 1);
 					sendTrajectory(tTravel, 2.0, 0.0, 0.0, 1.0, 0.0);
@@ -279,15 +266,20 @@ int main(int argc, char** argv) {
 				break;
 
 			case 2:
+				/* Hold state, hovers in place
+				*  Input: state change + trajectory completion
+				*  Output: stop tracking
+				*/
+
 				//Check exit conditions
-				if(!flying && isDone) {
+				if(isDone && !flying) {
 					float tTravel = sqrt(pow(quad_x,2) + pow(quad_y,2) + pow(quad_z,2)) / maxV;
 					tTravel = limit(tTravel, 10, 1);
 					sendLandTrajectory(tTravel);
 					isDone = false;
 
 					ROS_INFO("Landing at 0.0, 0.0, 0.0, time of travel: %f", tTravel);
-					state = -1;
+					state = 0;
 
 				}else if(tracking && isDone) {
 					ROS_INFO("Joy Control Started!");
@@ -296,6 +288,10 @@ int main(int argc, char** argv) {
 				break;
 
 			case 3:
+				/* Tracking state, follows joystick
+				*  Input: state change
+				*/
+
 				if(isDone) {
 					float xNew = quad_x + joy_x;
 					float yNew = quad_y + joy_y;
@@ -308,11 +304,7 @@ int main(int argc, char** argv) {
 				}
 
 				//Check exit conditions
-				if(!flying) { 
-					ROS_INFO("Stop Joy Control first!!");
-					flying = true;
-
-				}else if(!tracking) {
+				if(!tracking) {
 					ROS_INFO("Halting Joy Control");		
 					state = 2;
 				}

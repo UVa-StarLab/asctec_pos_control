@@ -3,10 +3,13 @@
 #include <tf/transform_datatypes.h>
 #include <sensor_msgs/Joy.h>
 #include <geometry_msgs/PointStamped.h>
+
 #include <pc_asctec_sim/pc_goal_cmd.h>
 #include <pc_asctec_sim/pc_feedback.h>
 #include <pc_asctec_sim/pc_traj_cmd.h>
 #include <pc_asctec_sim/pc_state.h>
+#include <pc_asctec_sim/pc_feedback.h>
+
 #include <visualization_msgs/Marker.h>
 #include <math.h>
 #include <string.h>
@@ -14,15 +17,16 @@
 #include <fstream>
 #include <Eigen/Dense>
 
-#define freq 20.0
+#define freq 40.0
 #define dt 1/freq
 
 using namespace std;
 using Eigen::MatrixXd;
 
 int yaw_counter = 0;
-bool waiting = false;
+bool waiting = true;
 bool timing = false;
+string goalID = "Init";
 
 MatrixXd A(6,6);
 double t_end = 0.0;
@@ -41,6 +45,13 @@ void timerCallback(const ros::TimerEvent&) {
    point_ct++;
    c_time = 0.0;
    timing = false;
+}
+
+void goalCallback(const pc_asctec_sim::pc_feedback::ConstPtr& msg)
+{
+	//if(msg->goal_id == goalID) {
+		waiting = false;
+	//}
 }
 
 void state_callback(const pc_asctec_sim::pc_state::ConstPtr& msg) 
@@ -110,6 +121,7 @@ int main(int argc, char** argv) {
    pos_goal = nh.advertise<pc_asctec_sim::pc_goal_cmd>(quad_name + "/pos_goals", 10);
    viz_goal = nh.advertise<geometry_msgs::PointStamped>(quad_name + "/viz_goals",10);
    trail_pub = nh.advertise<visualization_msgs::Marker>(quad_name + "/trajectory_trail",10);
+   goal_feedback = nh.subscribe(quad_name + "/goal_feedback", 10, goalCallback);
    state_feed = nh.subscribe(quad_name + "/state", 10, state_callback);
    ros::Rate rate(freq);
 
@@ -241,6 +253,8 @@ int main(int argc, char** argv) {
          }
 
 	 goal.goal_id = c_time; 
+	 goalID = goal.goal_id;
+	 goal.goal_limit = 0.3;
 	 for(int i=5; i>=0; i--) {
 	    goal.x += X(5-i,point_ct)*pow(c_time,i);
 	    goal.x_vel += i*X(5-i,point_ct)*pow(c_time,i-1);
@@ -260,6 +274,8 @@ int main(int argc, char** argv) {
 	 }
 
 	 pos_goal.publish(goal);
+	 waiting = true;	
+
          geometry_msgs::PointStamped viz;
          viz.header.stamp = ros::Time::now();
          viz.header.frame_id = "/odom";

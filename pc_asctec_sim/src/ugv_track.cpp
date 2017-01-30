@@ -30,7 +30,6 @@ string count = "a";
 bool tracking = false;
 bool flying = false;
 bool isDone = true;
-bool starter = false;
 
 float robot_x, robot_y, robot_yaw, quad_x, quad_y, quad_z;
 string world, ugv, quad_name, quad_frame;
@@ -45,17 +44,13 @@ void trajCallback(const std_msgs::Empty::ConstPtr& msg)
 
 void joyCallback(const sensor_msgs::Joy::ConstPtr& msg)
 {
-	if(msg->buttons[0] && !flying) {
-		flying = true;
-
-	}else if(msg->buttons[1] && flying) {	
-		flying = false;
-
-	}else if(msg->buttons[2] && flying) {
+	if(msg->buttons[2] && flying) {
 		tracking = !tracking;
+		ROS_INFO("Switch Tracking state!");
 
 	}else if(msg->buttons[3] && state == 0) {
-		starter = true;
+		flying = true;
+		ROS_INFO("Started!!");
 	}
 }
 
@@ -233,29 +228,16 @@ int main(int argc, char** argv) {
 		show_border(outBorder());
 
 		switch(state) {
-			case -1:
-				//Check exit conditions
-				if(isDone) {
-					std_msgs::Bool go;
-					go.data = false;
-					start_pub.publish(go);
-					starter = false;
-					state = 0;
-				}
-				break;
 			case 0:
 				//Check exit conditions
-				if(starter) {
-					std_msgs::Bool go;
-					go.data = true;
-					start_pub.publish(go);
+				if(flying && isDone) {
 					state = 1;			
 				}
 				break;
 
 			case 1:
 				//Check exit conditions
-				if(flying && isDone) {
+				if(isDone) {
 					float tTravel = sqrt(pow(quad_x,2) + pow(quad_y,2) + pow((1 - quad_z),2)) / maxV;
 					tTravel = limit(tTravel, 10, 1);
 					sendTrajectory(tTravel, 2.0, 0.0, 0.0, 1.0, 0.0);
@@ -268,14 +250,14 @@ int main(int argc, char** argv) {
 
 			case 2:
 				//Check exit conditions
-				if(!flying && isDone) {
+				if(isDone && !flying) {
 					float tTravel = sqrt(pow(quad_x,2) + pow(quad_y,2) + pow(quad_z,2)) / maxV;
 					tTravel = limit(tTravel, 10, 1);
 					sendLandTrajectory(tTravel);
 					isDone = false;
 
 					ROS_INFO("Landing at 0.0, 0.0, 0.0, time of travel: %f", tTravel);
-					state = -1;
+					state = 0;
 
 				}else if(tracking && isDone) {
 					float xNew = robot_x;
@@ -306,11 +288,7 @@ int main(int argc, char** argv) {
 				}
 
 				//Check exit conditions
-				if(!flying) { 
-					ROS_INFO("Stop tracking first!!");
-					flying = true;
-
-				}else if(!tracking) {
+				if(!tracking) {
 					ROS_INFO("Halting tracking of UGV");		
 					state = 2;
 				}

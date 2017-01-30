@@ -5,19 +5,24 @@ from dynamic_reconfigure.parameter_generator_catkin import *
  
 gen = ParameterGenerator()
  
-gen.add("k_p_xy",       double_t,    0, "k_p_xy",  15.5,  0, 1000)
-gen.add("k_i_xy",       double_t,    0, "k_i_xy",  0.55,  0, 200)
-gen.add("k_d_xy",       double_t,    0, "k_v_xy",  12.5,  0, 700)
-gen.add("k_a_xy",       double_t,    0, "k_a_xy",  3.80,  0, 100)
+gen.add("k_p_x",        double_t,    0, "k_p_xy",  580.0, 0, 30000)
+gen.add("k_i_x",        double_t,    0, "k_i_xy",  70.0,  0, 200)
+gen.add("k_d_x",        double_t,    0, "k_v_xy",  406.0, 0, 30000)
+gen.add("k_a_x",        double_t,    0, "k_a_xy",  45.0,  0, 100)
 
-gen.add("k_p_z",        double_t,    0, "k_p_z",   7.05,  0, 1000)
-gen.add("k_i_z",        double_t,    0, "k_i_z",   1.32,  0, 200)
-gen.add("k_d_z",        double_t,    0, "k_v_z",   3.55,  0, 700)
-gen.add("k_a_z",        double_t,    0, "k_a_z",   2.42,  0, 100)
+gen.add("k_p_y",        double_t,    0, "k_p_xy",  580.0, 0, 30000)
+gen.add("k_i_y",        double_t,    0, "k_i_xy",  70.0,  0, 200)
+gen.add("k_d_y",        double_t,    0, "k_v_xy",  406.0, 0, 30000)
+gen.add("k_a_y",        double_t,    0, "k_a_xy",  45.0,  0, 100)
+
+gen.add("k_p_z",        double_t,    0, "k_p_z",   80.0,  0, 500)
+gen.add("k_i_z",        double_t,    0, "k_i_z",   25.0,  0, 200)
+gen.add("k_d_z",        double_t,    0, "k_v_z",   25.0,  0, 500)
+gen.add("k_a_z",        double_t,    0, "k_a_z",   5.0,   0, 100)
  
-gen.add("k_p_yaw",      double_t,    0, "k_p_yaw", 1.92,  0, 500)
-gen.add("k_i_yaw",      double_t,    0, "k_i_yaw", 0.15,  0, 500)
-gen.add("k_d_yaw",      double_t,    0, "k_v_yaw", 2.44,  0, 500)
-gen.add("k_a_yaw",      double_t,    0, "k_a_yaw", 0.20,  0, 500)
+gen.add("k_p_yaw",      double_t,    0, "k_p_yaw", 10.0,  0, 500)
+gen.add("k_i_yaw",      double_t,    0, "k_i_yaw", 1.0,   0, 500)
+gen.add("k_d_yaw",      double_t,    0, "k_v_yaw", 1.0,   0, 500)
+gen.add("k_a_yaw",      double_t,    0, "k_a_yaw", 0.0,   0, 500)
 
 exit(gen.generate(PACKAGE, "asctec_tuner", "tuner"))

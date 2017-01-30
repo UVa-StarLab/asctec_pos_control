@@ -6,7 +6,7 @@
   <arg name="world_frame" value="/odom" />
   <arg name="loop" value="true" />
   <arg name="loop_point" value="2" />
-  <arg name="file" value="trap.txt" />
+  <arg name="file" value="trap_xy.txt" />
   <arg name="tuning_file" value="default_h.yaml" /> 
 
   <!-- Vicon connection node -->
@@ -25,7 +25,8 @@
   <!-- Asctec Position Controller -->
   <node name="asctec_controller" 
         pkg="pc_asctec_sim" 
-        type="controller_node">
+        type="controller_node"
+	output="screen">
 
      <rosparam file="$(find pc_asctec_sim)/cfg/$(arg tuning_file)" command="load"/>
 

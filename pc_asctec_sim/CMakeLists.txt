@@ -142,6 +142,7 @@ include_directories(
 
 ## Declare a C++ executable
 add_executable(controller_node src/controller.cpp)
+add_executable(controller2_node src/controller2.cpp)
 add_executable(trajectory_file_node src/trajectory_file.cpp)
 add_executable(trajectory_real_node src/trajectory_real.cpp)
 add_executable(ugv_tracker src/ugv_track.cpp)
@@ -151,6 +152,8 @@ add_executable(joy_follower src/joy_follow.cpp)
 ## same as for the library above
 add_dependencies(controller_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 add_dependencies(controller_node ${${PROJECT_NAME}_gencfg} ${catkin_EXPORTED_TARGETS})
+add_dependencies(controller2_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(controller2_node ${${PROJECT_NAME}_gencfg} ${catkin_EXPORTED_TARGETS})
 add_dependencies(trajectory_file_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 add_dependencies(trajectory_real_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 add_dependencies(ugv_tracker ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
@@ -158,6 +161,9 @@ add_dependencies(joy_follower ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPOR
 
 ## Specify libraries to link a library or executable target against
 target_link_libraries(controller_node
+  ${catkin_LIBRARIES}
+)
+target_link_libraries(controller2_node
   ${catkin_LIBRARIES}
 )
 target_link_libraries(trajectory_file_node

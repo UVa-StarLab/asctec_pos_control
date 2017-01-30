@@ -19,6 +19,12 @@ float k_p_y, k_i_y, k_d_y, k_a_y;
 float k_p_z, k_i_z, k_d_z, k_a_z;
 float k_p_yaw, k_i_yaw, k_d_yaw, k_a_yaw;
 
+bool started = true;
+bool halting = false;
+
+bool attack = false;
+bool att_dir = true;
+float att_off = 0.2;
 bool steady = false;
 bool counting = false;
 
@@ -28,6 +34,23 @@ int yaw_counter = 0;
 ros::Publisher goal_feedback, accel_quad_cmd, state_pub, trail_pub;
 ros::Subscriber pc_goal_cmd, joy_call, bat_sub, start_sub;
 visualization_msgs::Marker trail;
+
+void start_motors(bool starter)
+{
+	pc_asctec_sim::SICmd temp;
+	temp.cmd[0] = true;
+	temp.cmd[1] = true;
+	temp.cmd[2] = true;
+	temp.cmd[3] = true;
+	temp.yaw = -M_PI;
+
+	if(started != starter) {
+		accel_quad_cmd.publish(temp);
+		if(started) {
+			halting = true;
+		}
+	}
+}
 
 void init(struct POS_DATA * pos_ptr, struct PID_DATA * ctl_ptr)
 {
@@ -117,9 +140,9 @@ bool setBatteryStatus(void)
 
 bool goal_arrived(struct PID_DATA * ctl_ptr, struct POS_DATA * pos_ptr)
 {
-   float distance = sqrt((ctl_ptr->error_x) * (ctl_ptr->error_x) + 
+   float distance = (ctl_ptr->error_x) * (ctl_ptr->error_x) + 
                            (ctl_ptr->error_y) * (ctl_ptr->error_y) + 
-                           (ctl_ptr->error_z) * (ctl_ptr->error_z)); 
+                           (ctl_ptr->error_z) * (ctl_ptr->error_z); 
    
    if((distance <= (pos_ptr->goal_range)) && not (pos_ptr->goal_arrival)) {
       pos_ptr->wait_start = ros::Time::now().toSec(); 
@@ -174,6 +197,7 @@ void callback(const pc_asctec_sim::tunerConfig &config, uint32_t level) {
 
 void goal_callback(const pc_asctec_sim::pc_goal_cmd::ConstPtr& msg)
 {
+   if(started) {
        position_data.goal_x = msg->x;
        position_data.goal_y = msg->y;
        position_data.goal_z = msg->z;
@@ -195,11 +219,38 @@ void goal_callback(const pc_asctec_sim::pc_goal_cmd::ConstPtr& msg)
        position_data.wait_time = msg->wait_time;
        position_data.goal_range = msg->goal_limit;
        position_data.goal_id = msg->goal_id;  
+   }  
+}
+
+void startCallback(const std_msgs::Bool::ConstPtr& msg)
+{
+	start_motors(msg->data);
 }
 
 void ll_callback(const pc_asctec_sim::LLStatus::ConstPtr& msg)
 {
    battery = msg->battery_voltage;
+   //started = msg->flying;
+   if(!started) {
+	halting = false;
+   }
+}
+
+void timerCallback(const ros::TimerEvent&) {
+   steady = true;
+}
+
+void joy_callback(const sensor_msgs::Joy::ConstPtr& msg)
+{
+   if(msg->buttons[0]) {
+      attack = !attack;
+
+      if(attack) {
+         ROS_INFO("Attack on!");     
+      }else {
+	 ROS_INFO("Attack off!");
+      }
+   }
 }
 
 float limit(float input, float ceiling, float floor) 
@@ -237,16 +288,6 @@ void update_controller(struct PID_DATA * controller_ptr, struct POS_DATA * posit
    controller_ptr->error_yaw_vel = (position_ptr->goal_vel_yaw) - 
                                    (position_ptr->vel_yaw);
 
-   /* ---- Acc calculation ---- */
-   controller_ptr->error_x_acc = (position_ptr->goal_acc_x) - 
-                                 (position_ptr->acc_x);
-   controller_ptr->error_y_acc = (position_ptr->goal_acc_y) - 
-                                 (position_ptr->acc_y);
-   controller_ptr->error_z_acc = (position_ptr->goal_acc_z) - 
-                                 (position_ptr->acc_z); 
-   controller_ptr->error_yaw_acc = (position_ptr->goal_acc_yaw) - 
-                                   (position_ptr->acc_yaw);
-
    /* ---- Windup Prevention ---- */
    controller_ptr->integral_x = limit(controller_ptr->integral_x, INTEGRAL_LIMIT, 0);
    controller_ptr->integral_y = limit(controller_ptr->integral_y, INTEGRAL_LIMIT, 0);
@@ -256,10 +297,10 @@ void update_controller(struct PID_DATA * controller_ptr, struct POS_DATA * posit
 
 void update_real_cmd(struct PID_DATA * ctl_ptr, struct POS_DATA * pos_ptr)
 {
-   double roll;
-   double pitch;
-   double thrust;
-   double yaw;
+   double roll, des_r;
+   double pitch, des_p;
+   double thrust, des_t;
+   double yaw, des_y;
 
    yaw = -(k_p_yaw * (ctl_ptr->error_yaw) + 
            k_i_yaw * (ctl_ptr->integral_yaw) + 
@@ -272,49 +313,35 @@ void update_real_cmd(struct PID_DATA * ctl_ptr, struct POS_DATA * pos_ptr)
       real_cmd.yaw = M_PI * (yaw / YAW_MAX);
    }
 
-   pitch = -((k_p_x * (ctl_ptr->error_x) + 
-              k_i_x * (ctl_ptr->integral_x) + 
-              k_d_x * (ctl_ptr->error_x_vel) + 
-	      k_a_x * (ctl_ptr->error_x_acc)) *
-              cos(pos_ptr->pos_yaw)) + 
+   des_r = k_p_x * ctl_ptr->error_x + 
+	   k_d_x * ctl_ptr->error_x_vel + 
+	   k_i_x * ctl_ptr->integral_x +
+	   pos_ptr->goal_acc_x;
 
-           -((k_p_y * (ctl_ptr->error_y) + 
-              k_i_y * (ctl_ptr->integral_y) + 
-              k_d_y * (ctl_ptr->error_y_vel) + 
-	      k_a_y * (ctl_ptr->error_y_acc)) *
-              sin(pos_ptr->pos_yaw)); 
-   
+   des_p = k_p_y * ctl_ptr->error_y + 
+	   k_d_y * ctl_ptr->error_y_vel +
+	   k_i_y * ctl_ptr->integral_y + 
+	   pos_ptr->goal_acc_y;
+
+   des_t = k_p_z * ctl_ptr->error_z + 
+	   k_d_z * ctl_ptr->error_z_vel + 
+	   k_i_z * ctl_ptr->integral_z +
+	   pos_ptr->goal_acc_z;
+
+   pitch = -(1/G) * (des_p*sin(pos_ptr->goal_yaw) + des_r*cos(pos_ptr->goal_yaw));
+   roll =  -(1/G) * (des_p*cos(pos_ptr->goal_yaw) + des_r*sin(pos_ptr->goal_yaw));
+   thrust = MASS * des_t + G_TH;
+
    pitch = limit(pitch, PITCH_MAX, PITCH_MIN);
+   roll = limit(roll, ROLL_MAX, ROLL_MIN);
+   thrust = limit(thrust, THRUST_MAX, THRUST_MIN);
 
    if(!isnan(M_PI * (pitch / PITCH_MAX) / 24)) {
       real_cmd.pitch = M_PI * (pitch / PITCH_MAX) / 24;
    }
-
-   roll = ((k_p_x * (ctl_ptr->error_x) + 
-            k_i_x * (ctl_ptr->integral_x) + 
-            k_d_x * (ctl_ptr->error_x_vel) +
-	    k_a_x * (ctl_ptr->error_x_acc)) *
-            sin(pos_ptr->pos_yaw)) +
-
-          -((k_p_y * (ctl_ptr->error_y) + 
-             k_i_y * (ctl_ptr->integral_y) + 
-             k_d_y * (ctl_ptr->error_y_vel) + 
-	     k_a_y * (ctl_ptr->error_y_acc)) *
-             cos(pos_ptr->pos_yaw));
-
-   roll = limit(roll, ROLL_MAX, ROLL_MIN);
-
    if(!isnan(M_PI * (roll / ROLL_MAX) / 24)) {
       real_cmd.roll = M_PI * (roll / ROLL_MAX) / 24;
    }
-
-   thrust = k_p_z * (ctl_ptr->error_z) + 
-            k_i_z * (ctl_ptr->integral_z) + 
-            k_d_z * (ctl_ptr->error_z_vel) +
-	    k_a_z * (ctl_ptr->error_z_acc) + G_TH;
-
-   thrust = limit(thrust, THRUST_MAX, THRUST_MIN);
-
    if(!isnan(thrust / THRUST_MAX)) {
       real_cmd.thrust = thrust / THRUST_MAX;
    }
@@ -383,6 +410,9 @@ int main(int argc, char** argv) {
 
    ROS_INFO("Dynamic Reconfigure Server Started");
 
+   ros::Timer timer_event = nh.createTimer(ros::Duration(1.0), timerCallback, true);
+   timer_event.stop();
+
    string name, world_frame, frame;
    ros::param::get("~world_frame", world_frame);
    ros::param::get("~name", name);
@@ -415,6 +445,7 @@ int main(int argc, char** argv) {
 
    pc_goal_cmd = nh.subscribe(name + "/pos_goals", 1, goal_callback);
    bat_sub = nh.subscribe(name + "/ll_status", 1, ll_callback);
+   start_sub = nh.subscribe(name + "/start_motors", 1, startCallback);
    ros::Rate rate(CONTROL_RATE);
 
    tf::StampedTransform transform;
@@ -482,6 +513,14 @@ int main(int argc, char** argv) {
       position_ptr->pos_z = transform.getOrigin().z();  
       position_ptr->pos_yaw = tf::getYaw(transform.getRotation()) + 2*M_PI*yaw_counter;
 
+      if(attack) {
+	 if(att_dir) {
+            position_ptr->pos_z = transform.getOrigin().z() + att_off;
+	 }else {
+	    position_ptr->pos_z = transform.getOrigin().z() - att_off;
+	 }
+      }
+
     //Adjust yaw counter
       float yaw_dif = position_ptr->pos_yaw - position_ptr->pos_yaw_past;
       if(abs(yaw_dif) > M_PI) {
@@ -522,14 +561,35 @@ int main(int argc, char** argv) {
       setAvgAccel(position_ptr);
 
     //Update controller values
-      update_controller(controller_ptr, position_ptr);   
+      update_controller(controller_ptr, position_ptr);
+
+    //Attack Controller in Z-axis
+      if(attack) {
+	 if(controller_ptr->error_z < 0.2 && !counting) {
+	    counting = true;
+	    timer_event.start();
+
+	 }else if (controller_ptr->error_z >= 0.2 && counting) {
+	    counting = false;
+	    timer_event.stop();
+
+	 }else if(steady) {
+	    steady = false;
+	    counting = false;
+	    att_dir = !att_dir;
+	    timer_event.stop();
+	 }
+      }    
 
     //Check if target goal was accomplished -> update new goal and publish goal confirm  
       goal_arrived(controller_ptr, position_ptr);
 
-      update_real_cmd(controller_ptr, position_ptr);
-      accel_quad_cmd.publish(real_cmd);
-
+      //if(started && !halting) {
+           update_real_cmd(controller_ptr, position_ptr);
+           accel_quad_cmd.publish(real_cmd);
+      //}else {
+	   //position_ptr->goal_z =-0.1;
+      //}
     //Publish trail
       publish_trail(position_ptr->pos_x, position_ptr->pos_y, position_ptr->pos_z);
 

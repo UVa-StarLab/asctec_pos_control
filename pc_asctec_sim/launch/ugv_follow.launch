@@ -19,7 +19,7 @@
   <node pkg="asctec_ll_updated" name="$(arg name)" type="asctec_ll_updated_node" output="screen" respawn="true">
      <param name="port" value="$(arg port)"/>
      <param name="ll_status_rate" value="1"/>
-     <param name="imu_calc_data_rate" value="10"/>
+     <param name="imu_calc_data_rate" value="0"/>
      <param name="rc_data_rate" value="0"/>
      <param name="ctrl_out_rate" value="10"/>
      <param name="gps_data_advanced_rate" value="0"/>
