@@ -26,7 +26,7 @@
 #define YW_GAIN 0.3
 #define X_GAIN 0.3
 #define Y_GAIN 0.3
-#define Z_GAIN 0.3
+#define Z_GAIN 0.15
 
 using namespace std;
 
@@ -36,7 +36,7 @@ bool flying = false;
 bool tracking = false;
 bool isDone = true;
 
-float quad_x, quad_y, quad_z;
+float quad_x, quad_y, quad_z, quad_yaw;
 float joy_x, joy_y, joy_z, joy_yaw;
 string world, quad_name, quad_frame;
 
@@ -57,16 +57,37 @@ void joyCallback(const sensor_msgs::Joy::ConstPtr& msg)
 		flying = !flying;
 
 	}else if(msg->buttons[5] && state == 3) {
-		joy_yaw = YW_GAIN * msg->axes[0];
-		joy_x = X_GAIN * msg->axes[4];
-		joy_y = Y_GAIN * msg->axes[3];
-		joy_z = Z_GAIN * msg->axes[1];
+		joy_yaw = 0;
+		joy_x = 0;
+		joy_y = 0;
+		if(abs(msg->axes[1]) >= 0.3) {
+			joy_z = Z_GAIN * msg->axes[1];
+		}else {
+			joy_z = 0.0;
+		}
 
 	}else if(msg->buttons[4] && state == 3) {
-		joy_x = X_GAIN * msg->axes[4];
-		joy_y = Y_GAIN * msg->axes[3];	
-		joy_z = 0.0;
-		joy_yaw = 0.0;
+                joy_z = 0.0;
+                if(msg->axes[4] >= 0.3 || msg->axes[4] <= -0.3) {
+                        joy_x = X_GAIN * msg->axes[4];
+                }else {
+                        joy_x = 0.0;
+                }
+                if(msg->axes[3] >= 0.3 || msg->axes[3] <= -0.3) {
+                        joy_y = Y_GAIN * msg->axes[3];  
+                }else {
+                        joy_y = 0.0;
+                }
+                if(msg->axes[0] >= 0.3 || msg->axes[0] <= -0.3) {
+                        joy_yaw = YW_GAIN * msg->axes[0];
+                }else {
+                        joy_yaw = 0.0;
+                }
+	}else if(state == 3) {
+                joy_x = 0.0;
+                joy_y = 0.0;
+                joy_z = 0.0;
+                joy_yaw = 0.0;
 	}
 }
 
@@ -156,6 +177,7 @@ void sendPoint(float x, float y, float z, float yaw)
 	next.x = x;
 	next.y = y;
 	next.z = z;
+	next.yaw = yaw;
 	pos_pub.publish(next);
 }
 
@@ -293,14 +315,16 @@ int main(int argc, char** argv) {
 				*/
 
 				if(isDone) {
-					float xNew = quad_x + joy_x;
-					float yNew = quad_y + joy_y;
-					float zNew = quad_z + joy_z;
-					float yawNew = 0.0;
+					if(abs(joy_x) > 0.1 || abs(joy_y) > 0.1 || abs(joy_z) > 0.1 || abs(joy_yaw) > 0.1) {
+						float xNew = quad_x + joy_x;
+						float yNew = quad_y + joy_y;
+						float zNew = quad_z + joy_z;
+						float yawNew = quad_yaw + joy_yaw;
 
-					xNew = limit(xNew, XBOUND_H, XBOUND_L);
-					yNew = limit(yNew, YBOUND_H, YBOUND_L);
-					sendPoint(xNew, yNew, zNew, yawNew);
+						xNew = limit(xNew, XBOUND_H, XBOUND_L);
+						yNew = limit(yNew, YBOUND_H, YBOUND_L);
+						sendPoint(xNew, yNew, zNew, yawNew);
+					}
 				}
 
 				//Check exit conditions

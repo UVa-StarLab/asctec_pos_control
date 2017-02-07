@@ -254,7 +254,7 @@ int main(int argc, char** argv) {
 
 	 goal.goal_id = c_time; 
 	 goalID = goal.goal_id;
-	 goal.goal_limit = 0.3;
+	 goal.goal_limit = 0.25;
 	 for(int i=5; i>=0; i--) {
 	    goal.x += X(5-i,point_ct)*pow(c_time,i);
 	    goal.x_vel += i*X(5-i,point_ct)*pow(c_time,i-1);
@@ -274,7 +274,7 @@ int main(int argc, char** argv) {
 	 }
 
 	 pos_goal.publish(goal);
-	 waiting = true;	
+	 //waiting = true;	
 
          geometry_msgs::PointStamped viz;
          viz.header.stamp = ros::Time::now();

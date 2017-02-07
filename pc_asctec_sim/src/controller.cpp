@@ -461,7 +461,8 @@ int main(int argc, char** argv) {
     //Grab new transform data
       listener.lookupTransform(world_frame, frame, ros::Time(0), transform);
       now = transform.stamp_;
-      dt = (now.toSec() - past.toSec()) + (now.toNSec() - past.toNSec())/pow(10,9);
+      //dt = (now.toSec() - past.toSec()) + (now.toNSec() - past.toNSec())/pow(10,9);
+	dt = (now.toSec() - past.toSec());
 
     //Set t-1 values
       position_ptr->pos_x_past = position_ptr->pos_x;

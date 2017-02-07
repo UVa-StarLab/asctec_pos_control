@@ -51,6 +51,10 @@ void joyCallback(const sensor_msgs::Joy::ConstPtr& msg)
 	}else if(msg->buttons[3] && state == 0) {
 		flying = true;
 		ROS_INFO("Started!!");
+
+	}else if(msg->buttons[3] && state == 2) {
+		flying = false;
+		
 	}
 }
 
