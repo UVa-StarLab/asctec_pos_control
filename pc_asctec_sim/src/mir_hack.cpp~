@@ -138,19 +138,19 @@ int main(int argc, char** argv) {
 	traj_sub = nh.subscribe(quad_name + "/traj_end", 10, trajCallback);
 	joy_sub = nh.subscribe("/joy", 10, joyCallback);
 
-	
+	/*
 	listener.waitForTransform(world, quad_frame, ros::Time(0), ros::Duration(3.0));
 	listener.waitForTransform(world, box_frame, ros::Time(0), ros::Duration(3.0));
 
 	listener.lookupTransform(world, box_frame, ros::Time(0), transform);
 	box_x = transform.getOrigin().x();
 	box_y = transform.getOrigin().y();
-	
+	*/
 	ROS_INFO("Running: Mirror Hack");
 
 	while(ros::ok()) {
 		ros::spinOnce();
-		
+		/*
 		listener.lookupTransform(world, quad_frame, ros::Time(0), transform);
 		quad_x = transform.getOrigin().x();
 		quad_y = transform.getOrigin().y();
@@ -159,7 +159,7 @@ int main(int argc, char** argv) {
 		listener.lookupTransform(world, ugv_frame, ros::Time(0), transform);
 		ugv_x = transform.getOrigin().x();
 		ugv_y = transform.getOrigin().y();
-		
+		*/
 		switch(state) {
 			case 0:
 				// Transition fwd - Waits for joy signal "flying" = true, moves quad + mirror to start height
