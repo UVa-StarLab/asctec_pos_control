@@ -1,5 +1,5 @@
 <launch>
-
+  <!-- Z-offset is 0.82 -->
   <arg name="port" value="/dev/ttyUSB0" />
   <arg name="name" value="hummingbird_1" />
 
@@ -9,6 +9,8 @@
   <arg name="world_frame" value="/odom" />
 
   <arg name="tuning_file" value="default_h.yaml" />  
+  <arg name="z_offset" value="0.82" />
+
 
   <!-- Vicon connection node -->
   <include file="$(find vicon_bridge)/launch/vicon.launch" />
@@ -33,6 +35,7 @@
      <param name="name" value="$(arg name)"/>
      <param name="world_frame" value="$(arg world_frame)"/>
      <param name="quad_frame" value="$(arg quad_frame)"/>
+     <param name="z_offset" value="$(arg z_offset)"/>
 
   </node>
 

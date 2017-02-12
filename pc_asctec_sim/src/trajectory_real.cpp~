@@ -1,4 +1,5 @@
 #include <ros/ros.h>
+#include <sensor_msgs/Joy.h>
 #include <std_msgs/Empty.h>
 #include <geometry_msgs/PointStamped.h>
 #include <pc_asctec_sim/pc_goal_cmd.h>
@@ -35,7 +36,7 @@ int max_point = 0;
 string quad_name, world;
 
 ros::Publisher pos_goal, traj_goal, viz_goal, trail_pub;
-ros::Subscriber goal_feedback, traj_feed, state_feed;
+ros::Subscriber goal_feedback, joy_feed, traj_feed, state_feed;
 
 pc_asctec_sim::pc_state state_data;
 

@@ -72,10 +72,10 @@ void joyCallback(const sensor_msgs::Joy::ConstPtr& msg)
 void sendTrajectory(float time, float wait, float x, float y, float z, float yaw) 
 {
 	pc_asctec_sim::pc_traj_cmd cmd;
-	cmd.x_end[0] = x;
-	cmd.y_end[0] = y;
-	cmd.z_end[0] = z;
-	cmd.yaw_end[0] = yaw;
+	cmd.x[0] = x;
+	cmd.y[0] = y;
+	cmd.z[0] = z;
+	cmd.yaw[0] = yaw;
 	cmd.wait_time[0] = wait;
 	cmd.duration[0] = time;
 
@@ -86,17 +86,17 @@ void sendTrajectory(float time, float wait, float x, float y, float z, float yaw
 void sendLandTrajectory(float time) 
 {
 	pc_asctec_sim::pc_traj_cmd cmd;
-	cmd.x_end[0] = 0.0;
-	cmd.y_end[0] = 0.0;
-	cmd.z_end[0] = 1.0;
-	cmd.yaw_end[0] = 0.0;
+	cmd.x[0] = 0.0;
+	cmd.y[0] = 0.0;
+	cmd.z[0] = 1.0;
+	cmd.yaw[0] = 0.0;
 	cmd.wait_time[0] = 1.5;
 	cmd.duration[0] = time;
 
-	cmd.x_end[1] = 0.0;
-	cmd.y_end[1] = 0.0;
-	cmd.z_end[1] = 0.0;
-	cmd.yaw_end[1] = 0.0;
+	cmd.x[1] = 0.0;
+	cmd.y[1] = 0.0;
+	cmd.z[1] = 0.0;
+	cmd.yaw[1] = 0.0;
 	cmd.wait_time[1] = 0.0;
 	cmd.duration[1] = 3;
 

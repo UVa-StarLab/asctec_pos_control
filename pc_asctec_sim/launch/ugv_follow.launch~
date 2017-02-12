@@ -4,6 +4,9 @@
   <arg name="name" value="hummingbird_1" />
   <arg name="quad_frame" value="/vicon/hummingbird_1/hummingbird_1" />
   <arg name="world_frame" value="/odom" />
+  <arg name="loop" value="false" />
+  <arg name="loop_point" value="0" />
+  <arg name="file" value="avoid.txt" />
   <arg name="tuning_file" value="default_h.yaml" />  
 
   <!-- Vicon connection node -->
@@ -50,7 +53,7 @@
      <param name="quad_name" value="/hummingbird_1"/>
      <param name="quad_frame" value="/vicon/hummingbird_1/hummingbird_1"/>
      <param name="world_frame" value="/odom"/>
-     <param name="ugv_frame" value="/vicon/jackal1/jackal1"/>
+     <param name="ugv_frame" value="/vicon/jackal2/jackal2"/>
   </node>
 
 </launch>

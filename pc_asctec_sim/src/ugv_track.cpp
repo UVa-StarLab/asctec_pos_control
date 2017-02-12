@@ -8,7 +8,7 @@
 
 #include <pc_asctec_sim/pc_traj_cmd.h>
 #include <pc_asctec_sim/pc_goal_cmd.h>
-
+#include <pc_asctec_sim/pc_state.h>
 #include <sensor_msgs/Joy.h>
 
 #include <visualization_msgs/Marker.h>
@@ -31,11 +31,17 @@ bool tracking = false;
 bool flying = false;
 bool isDone = true;
 
-float robot_x, robot_y, robot_yaw, quad_x, quad_y, quad_z;
+float robot_x, robot_y, robot_yaw;
 string world, ugv, quad_name, quad_frame;
+pc_asctec_sim::pc_state quad_state;
 
 ros::Publisher traj_pub, border_pub, pos_pub, start_pub;
-ros::Subscriber traj_sub, joy_sub;
+ros::Subscriber traj_sub, joy_sub, state_sub;
+
+void stateCallback(const pc_asctec_sim::pc_state::ConstPtr& msg)
+{
+	quad_state = *msg;
+}
 
 void trajCallback(const std_msgs::Empty::ConstPtr& msg)
 {
@@ -127,10 +133,10 @@ void show_border(bool outOf)
 void sendTrajectory(float time, float wait, float x, float y, float z, float yaw) 
 {
 	pc_asctec_sim::pc_traj_cmd cmd;
-	cmd.x_end[0] = x;
-	cmd.y_end[0] = y;
-	cmd.z_end[0] = z;
-	cmd.yaw_end[0] = yaw;
+	cmd.x[0] = x;
+	cmd.y[0] = y;
+	cmd.z[0] = z;
+	cmd.yaw[0] = yaw;
 	cmd.wait_time[0] = wait;
 	cmd.duration[0] = time;
 
@@ -144,23 +150,24 @@ void sendPoint(float x, float y, float z, float yaw)
 	next.x = x;
 	next.y = y;
 	next.z = z;
+	next.yaw = yaw;
 	pos_pub.publish(next);
 }
 
 void sendLandTrajectory(float time) 
 {
 	pc_asctec_sim::pc_traj_cmd cmd;
-	cmd.x_end[0] = 0.0;
-	cmd.y_end[0] = 0.0;
-	cmd.z_end[0] = 1.0;
-	cmd.yaw_end[0] = 0.0;
+	cmd.x[0] = 0.0;
+	cmd.y[0] = 0.0;
+	cmd.z[0] = 1.0;
+	cmd.yaw[0] = 0.0;
 	cmd.wait_time[0] = 1.5;
 	cmd.duration[0] = time;
 
-	cmd.x_end[1] = 0.0;
-	cmd.y_end[1] = 0.0;
-	cmd.z_end[1] = 0.0;
-	cmd.yaw_end[1] = 0.0;
+	cmd.x[1] = 0.0;
+	cmd.y[1] = 0.0;
+	cmd.z[1] = 0.0;
+	cmd.yaw[1] = 0.0;
 	cmd.wait_time[1] = 0.0;
 	cmd.duration[1] = 3;
 
@@ -184,7 +191,7 @@ float limit(float value, float upper, float lower)
 bool outBorder(void)
 {
 	bool temp = false;
-	if(quad_x > XBOUND_H || quad_x < XBOUND_L || quad_y > YBOUND_H || quad_y < YBOUND_L) {
+	if(quad_state.x > XBOUND_H || quad_state.x < XBOUND_L || quad_state.y > YBOUND_H || quad_state.y < YBOUND_L) {
 		temp = true;
 	}
 	return temp;
@@ -202,18 +209,16 @@ int main(int argc, char** argv) {
 	ros::param::get("~world_frame", world);
 	ros::param::get("~ugv_frame", ugv);
 	ros::param::get("~quad_name", quad_name);
-	ros::param::get("~quad_frame", quad_frame);
 
 	traj_pub = nh.advertise<pc_asctec_sim::pc_traj_cmd>(quad_name + "/traj_points", 10);
 	pos_pub = nh.advertise<pc_asctec_sim::pc_goal_cmd>(quad_name + "/pos_goals", 10);
 	border_pub = nh.advertise<visualization_msgs::Marker>(quad_name + "/border", 10);
-	start_pub = nh.advertise<std_msgs::Bool>(quad_name + "/start_motors", 10);
 
 	traj_sub = nh.subscribe(quad_name + "/traj_end", 10, trajCallback);
 	joy_sub = nh.subscribe("/joy", 10, joyCallback);
+	state_sub = nh.subscribe(quad_name + "/state", 10, stateCallback);
 
 	listener.waitForTransform(world, ugv, ros::Time(0), ros::Duration(3.0));
-	listener.waitForTransform(world, quad_frame, ros::Time(0), ros::Duration(3.0));
 
 	ROS_INFO("Running: UGV Tracker");
 
@@ -222,12 +227,7 @@ int main(int argc, char** argv) {
 		listener.lookupTransform(world, ugv, ros::Time(0), transform);
 		robot_x = transform.getOrigin().x();
 		robot_y = transform.getOrigin().y();
-		robot_yaw = 0.0;
-
-		listener.lookupTransform(world, quad_frame, ros::Time(0), transform);
-		quad_x = transform.getOrigin().x();
-		quad_y = transform.getOrigin().y();
-		quad_z = transform.getOrigin().z();
+		robot_yaw = tf::getYaw(transform.getRotation());
 
 		show_border(outBorder());
 
@@ -242,7 +242,7 @@ int main(int argc, char** argv) {
 			case 1:
 				//Check exit conditions
 				if(isDone) {
-					float tTravel = sqrt(pow(quad_x,2) + pow(quad_y,2) + pow((1 - quad_z),2)) / maxV;
+					float tTravel = sqrt(pow(quad_state.x,2) + pow(quad_state.y,2) + pow((1 - quad_state.z),2)) / maxV;
 					tTravel = limit(tTravel, 10, 1);
 					sendTrajectory(tTravel, 2.0, 0.0, 0.0, 1.0, 0.0);
 					isDone = false;
@@ -255,7 +255,7 @@ int main(int argc, char** argv) {
 			case 2:
 				//Check exit conditions
 				if(isDone && !flying) {
-					float tTravel = sqrt(pow(quad_x,2) + pow(quad_y,2) + pow(quad_z,2)) / maxV;
+					float tTravel = sqrt(pow(quad_state.x,2) + pow(quad_state.y,2) + pow(quad_state.z,2)) / maxV;
 					tTravel = limit(tTravel, 10, 1);
 					sendLandTrajectory(tTravel);
 					isDone = false;
@@ -266,14 +266,15 @@ int main(int argc, char** argv) {
 				}else if(tracking && isDone) {
 					float xNew = robot_x;
 					float yNew = robot_y;
-					float yawNew = robot_yaw + 4*M_PI/5;
+					float yawNew = robot_yaw;
 					xNew = limit(xNew, XBOUND_H, XBOUND_L);
 					yNew = limit(yNew, YBOUND_H, YBOUND_L);
+					yawNew = limit(yawNew, M_PI, -M_PI);
 
-					float tTravel = sqrt(pow((xNew - quad_x),2) + pow((yNew - quad_y),2)) / maxV;
+					float tTravel = sqrt(pow((xNew - quad_state.x),2) + pow((yNew - quad_state.y),2)) / maxV;
 	
 					tTravel = limit(tTravel, 10, 1);
-					sendTrajectory(tTravel, 0.0, xNew, yNew, 1.0, 0.0);
+					sendTrajectory(tTravel, 0.0, xNew, yNew, 1.0, yawNew);
 					isDone = false;
 
 					ROS_INFO("Begin tracking of UGV");
@@ -285,10 +286,11 @@ int main(int argc, char** argv) {
 				if(isDone) {
 					float xNew = robot_x;
 					float yNew = robot_y;
-					float yawNew = robot_yaw + 4*M_PI/5;
+					float yawNew = robot_yaw;
 					xNew = limit(xNew, XBOUND_H, XBOUND_L);
 					yNew = limit(yNew, YBOUND_H, YBOUND_L);
-					sendPoint(xNew, yNew, 1.0, 0.0);
+					yawNew = limit(yawNew, M_PI, -M_PI);
+					sendPoint(xNew, yNew, 1.0, yawNew);
 				}
 
 				//Check exit conditions

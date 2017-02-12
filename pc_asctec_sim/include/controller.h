@@ -46,101 +46,57 @@
 
 using namespace std;
 
-/* ---------------- Prototype Definitions ---------------- */
-
-void init(struct POS_DATA * pos_ptr, 
-          struct PID_DATA * ctl_ptr);
-void update_controller(struct PID_DATA * controller_ptr, 
-                       struct POS_DATA * position_ptr);
-void update_real_cmd(struct PID_DATA * ctl_ptr, struct POS_DATA * pos_ptr);
-void goal_callback(const pc_asctec_sim::pc_goal_cmd::ConstPtr& msg);
-bool goal_arrived(struct PID_DATA * pid_ptr, struct POS_DATA * pos_ptr);
-float limit(float input, float ceiling);
-
 /* --------------- Data Structure Definitions ------------ */
 
-typedef struct PID_DATA
+typedef struct CTL_DATA
 {
-  float error_x;
-  float error_x_vel;
-  float error_x_acc;
-  float integral_x;
+	float e_x, e_vx, e_ax, i_x;
+	float e_y, e_vy, e_ay, i_y;
+	float e_z, e_vz, e_az, i_z;
+	float e_yaw, e_vyaw, e_ayaw, i_yaw;
 
-  float error_y;
-  float error_y_vel;
-  float error_y_acc;
-  float integral_y;
+	float kpx, kix, kvx, kax;
+	float kpy, kiy, kvy, kay;
+	float kpz, kiz, kvz, kaz;
+	float kpyaw, kiyaw, kvyaw, kayaw;
 
-  float error_z;
-  float error_z_vel;
-  float error_z_acc;
-  float integral_z;
+	float thrust, roll, pitch, yaw;
 
-  float error_yaw;
-  float error_yaw_vel;
-  float error_yaw_acc;
-  float integral_yaw;
+} control_data;
 
-} pid_data;
-
-typedef struct POS_DATA
+typedef struct STATE_DATA
 {
-  float pos_x;
-  float pos_y;
-  float pos_z;
-  float pos_yaw;
-  float relative_yaw;
+	double dt;
 
-  float pos_x_past;
-  float pos_y_past;
-  float pos_z_past;
-  float pos_yaw_past;
+	float x, y, z, yaw, relative_yaw;
+	float x_p, y_p, z_p, yaw_p;
+	float vx, vy, vz, vyaw;
+	float vx_p, vy_p, vz_p, vyaw_p;
 
-  float vel_x;
-  float vel_y;
-  float vel_z;
-  float vel_yaw;
+	float ax, ay, az, ayaw;
+	int ax_n, ay_n, az_n, ayaw_n;
+	float ax_buf[BUFFER], ay_buf[BUFFER], az_buf[BUFFER], ayaw_buf[BUFFER];
 
-  float vel_x_past;
-  float vel_y_past;
-  float vel_z_past;
-  float vel_yaw_past;
+	float g_x, g_y, g_z, g_yaw;
+	float g_vx, g_vy, g_vz, g_vyaw;
+	float g_ax, g_ay, g_az, g_ayaw;
+	float g_range;
+	float wait_time, wait_start;
+	
+	float battery;
+	int battery_status;
+	int yaw_counter;
+	bool yaw_check, waiting, g_arrival;
+	string g_id;
+	ros::Time past;
 
-  float acc_x;
-  float acc_y;
-  float acc_z;
-  float acc_yaw;
+} state_data;
 
-  int acc_x_now;
-  int acc_y_now;
-  int acc_z_now;
-  int acc_yaw_now;
+/* ---------------- Prototype Definitions ---------------- */
 
-  float acc_x_buf[BUFFER];
-  float acc_y_buf[BUFFER];
-  float acc_z_buf[BUFFER];
-  float acc_yaw_buf[BUFFER];
-
-  float goal_x;
-  float goal_y;
-  float goal_z;
-  float goal_yaw;
-
-  float goal_vel_x;
-  float goal_vel_y;
-  float goal_vel_z;
-  float goal_vel_yaw;
-
-  float goal_acc_x;
-  float goal_acc_y;
-  float goal_acc_z;
-  float goal_acc_yaw;
-
-  float goal_range;
-  int wait_time;
-  int wait_start;
-  bool waiting;
-  bool goal_arrival;
-  string goal_id;
-
-} pos_data;
+void init(struct STATE_DATA * pos_ptr, struct CTL_DATA * ctl_ptr);
+void update_controller(struct CTL_DATA * ctl_ptr, struct STATE_DATA * pos_ptr);
+void update_real_cmd(struct CTL_DATA * ctl_ptr, struct STATE_DATA * pos_ptr);
+void goal_callback(const pc_asctec_sim::pc_goal_cmd::ConstPtr& msg);
+bool goal_arrived(struct CTL_DATA * ctl_ptr, struct STATE_DATA * pos_ptr);
+float limit(float input, float ceiling, float floor);

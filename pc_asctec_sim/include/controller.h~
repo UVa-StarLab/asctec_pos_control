@@ -1,9 +1,7 @@
-#ifndef ASCTECCONTROL_H
-#define ASCTECCONTROL_H
-
 #include <ros/ros.h>
 
 #include <std_msgs/Bool.h>
+
 #include <geometry_msgs/Vector3.h>
 #include <sensor_msgs/Joy.h>
 #include <visualization_msgs/Marker.h>
@@ -13,7 +11,7 @@
 #include <pc_asctec_sim/pc_feedback.h>
 #include <pc_asctec_sim/pc_state.h>
 #include <pc_asctec_sim/LLStatus.h>
-#include <pc_asctec_sim/ascTunerConfig.h>
+#include <pc_asctec_sim/tunerConfig.h>
 
 #include <tf/transform_listener.h>
 #include <tf/transform_datatypes.h>
@@ -23,20 +21,16 @@
 #include <string.h>
 #include <math.h>
 
-using namespace std;
-
 #define CONTROL_RATE 50.0
 #define BUFFER 16
 
 #define INTEGRAL_LIMIT 5.0
 
-#define MASS 0.7 //in kg
-#define G_TH 25.0
-#define G 9.81
-
 #define THRUST_MAX 100.0
 #define THRUST_MIN 0.0
-
+#define G_TH 30.0
+#define G 9.81
+#define MASS 0.7 //in kg
 #define ROLL_MAX 100.0
 #define ROLL_MIN -ROLL_MAX
 
@@ -54,23 +48,14 @@ using namespace std;
 
 /* --------------- Data Structure Definitions ------------ */
 
-typedef struct K_DATA 
-{
-	float kpx, kix, kvx, kax;
-	float kpy, kiy, kvy, kay;
-	float kpz, kiz, kvz, kaz;
-	float kpyaw, kiyaw, kvyaw, kayaw;
-}k_data;
+typedef struct PUB_DATA {
+	visualization_msgs::Marker quad_trail;
+	visualization_msgs::Marker traj_trail;
+	geometry_msgs::Point goal_marker;
 
-typedef struct PUB_DATA 
-{
-	pc_asctec_sim::pc_state state;
+	pc_asctec_sim::pc_state State;
 	pc_asctec_sim::pc_feedback g_feedback;
 	pc_asctec_sim::SICmd TRPYcmd;
-
-	struct K_DATA k_val;
-	bool running;
-	float battery;
 
 }pub_data;
 
@@ -88,7 +73,12 @@ typedef struct CTL_DATA
 	float e_z, e_vz, e_az, i_z;
 	float e_yaw, e_vyaw, e_ayaw, i_yaw;
 
-	struct K_DATA k_val;
+	float kpx, kix, kvx, kax;
+	float kpy, kiy, kvy, kay;
+	float kpz, kiz, kvz, kaz;
+	float kpyaw, kiyaw, kvyaw, kayaw;
+
+	float thrust, roll, pitch, yaw;
 
 } control_data;
 
@@ -120,23 +110,20 @@ typedef struct STATE_DATA
 
 } state_data;
 
+/* ---------------- Prototype Definitions ---------------- */
 
-/* -------------------- Class Definition ---------------- */
 class AscTec_Controller
 {
 	public:
-		AscTec_Controller();
-		~AscTec_Controller();
-		struct PUB_DATA * runAsctec(struct PUB_DATA * pub, struct GOAL_DATA * goal_in, tf::StampedTransform * transform);
-		void setParams(struct K_DATA * k_ptr);
+		void Asctec_Controller();
+		struct PUB_DATA * runAsctec(struct PUB_DATA * pub_out, struct GOAL_DATA * goal_in, tf::StampedTransform * transform);
+
 	private:
 
 		void updatePosition(struct STATE_DATA * st_ptr, tf::StampedTransform * transform);
-		void freeGoal(struct STATE_DATA * st_ptr);
 		void updateGoal(struct GOAL_DATA * g_ptr, struct STATE_DATA * st_ptr);
 		void updateController(struct CTL_DATA * ctl_ptr, struct STATE_DATA * st_ptr);
-		pc_asctec_sim::SICmd * setCmd(struct CTL_DATA * ctl_ptr, struct STATE_DATA * st_ptr, pc_asctec_sim::SICmd * TRPY);
-		pc_asctec_sim::pc_state * fillState(struct STATE_DATA * st_ptr, pc_asctec_sim::pc_state * out_ptr);
+		void setCmd(struct CTL_DATA * ctl_ptr, struct STATE_DATA * st_ptr);
 		void initAsctec(struct STATE_DATA * pos_ptr, struct CTL_DATA * ctl_ptr);
 		
 		void checkBattery(struct STATE_DATA * state_ptr);
@@ -147,4 +134,10 @@ class AscTec_Controller
 		CTL_DATA controller, *c_ptr;
 		STATE_DATA state, *s_ptr;
 };
-#endif
+
+void init(struct STATE_DATA * pos_ptr, struct CTL_DATA * ctl_ptr);
+void update_controller(struct CTL_DATA * ctl_ptr, struct STATE_DATA * pos_ptr);
+void update_real_cmd(struct CTL_DATA * ctl_ptr, struct STATE_DATA * pos_ptr);
+void goal_callback(const pc_asctec_sim::pc_goal_cmd::ConstPtr& msg);
+bool goal_arrived(struct CTL_DATA * ctl_ptr, struct STATE_DATA * pos_ptr);
+float limit(float input, float ceiling, float floor);

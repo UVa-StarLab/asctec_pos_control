@@ -31,7 +31,7 @@ using namespace std;
 #define INTEGRAL_LIMIT 5.0
 
 #define MASS 0.7 //in kg
-#define G_TH 25.0
+#define G_TH 30.0
 #define G 9.81
 
 #define THRUST_MAX 100.0
