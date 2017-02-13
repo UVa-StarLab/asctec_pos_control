@@ -14,8 +14,8 @@
 #include <string.h>
 
 #define freq 5
-#define maxV 0.3
-#define maxV_T 0.7
+#define maxV 0.2
+#define maxV_T 0.4
 #define TRIGGER_RANGE 0.2
 #define F_HEIGHT 1.25
 #define L_HEIGHT 0.75
@@ -23,12 +23,13 @@
 
 using namespace std;
 
-int state = 0;
+int state = -1;
 string count = "a";
 bool flying = false;
 bool over_box = false;
 bool lower_box = false;
 bool isDone = true;
+bool starting = false;
 
 float quad_x, quad_y, quad_z, quad_yaw;
 float box_x, box_y;
@@ -36,7 +37,7 @@ float ugv_x, ugv_y;
 
 string world, quad_name, quad_frame, box_frame, ugv_frame;
 
-ros::Publisher traj_pub;
+ros::Publisher traj_pub, start_pub;
 ros::Subscriber traj_sub, joy_sub;
 
 void trajCallback(const std_msgs::Empty::ConstPtr& msg)
@@ -66,7 +67,10 @@ void joyCallback(const sensor_msgs::Joy::ConstPtr& msg)
 
 	}else if(msg->buttons[2] && state == 3) {
 		lower_box = false;
-	}	
+
+	}else if(msg->buttons[3] && state == -1) {
+		starting = true;
+	}
 }
 
 void sendTrajectory(float time, float wait, float x, float y, float z, float yaw) 
@@ -134,6 +138,7 @@ int main(int argc, char** argv) {
 	ros::param::get("~box_frame", box_frame);
 
 	traj_pub = nh.advertise<pc_asctec_sim::pc_traj_cmd>(quad_name + "/traj_points", 10);
+	start_pub = nh.advertise<std_msgs::Bool>(quad_name + "/start", 10);
 
 	traj_sub = nh.subscribe(quad_name + "/traj_end", 10, trajCallback);
 	joy_sub = nh.subscribe("/joy", 10, joyCallback);
@@ -141,6 +146,8 @@ int main(int argc, char** argv) {
 	
 	listener.waitForTransform(world, quad_frame, ros::Time(0), ros::Duration(3.0));
 	listener.waitForTransform(world, box_frame, ros::Time(0), ros::Duration(3.0));
+	listener.waitForTransform(world, ugv_frame, ros::Time(0), ros::Duration(3.0));
+
 
 	listener.lookupTransform(world, box_frame, ros::Time(0), transform);
 	box_x = transform.getOrigin().x();
@@ -161,6 +168,16 @@ int main(int argc, char** argv) {
 		ugv_y = transform.getOrigin().y();
 		
 		switch(state) {
+			case -1:
+				// Transition fwd - Waits for joy signal "starting" = true, begins holding quad in place
+				if(isDone && starting) {
+					ROS_INFO("Floating in place...");
+					std_msgs::Bool start;
+					start.data = true;
+					start_pub.publish(start);
+					state = 0;
+				}
+				break;
 			case 0:
 				// Transition fwd - Waits for joy signal "flying" = true, moves quad + mirror to start height
 				if(isDone && flying) {

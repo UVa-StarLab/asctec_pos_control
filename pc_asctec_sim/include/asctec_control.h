@@ -34,6 +34,8 @@ using namespace std;
 #define G_TH 25.0
 #define G 9.81
 
+#define BOUNDED_ANGLE 24.0 // divided by this number
+
 #define THRUST_MAX 100.0
 #define THRUST_MIN 0.0
 

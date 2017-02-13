@@ -33,7 +33,15 @@ struct PUB_DATA * AscTec_Controller::runAsctec(struct PUB_DATA * pub, struct GOA
 	updateController(c_ptr, s_ptr);
 
 	/* ---- Set TRPY Command ---- */
-	pub->TRPYcmd = *setCmd(c_ptr, s_ptr, &pub->TRPYcmd);
+	if(pub->running) {
+		pub->TRPYcmd = *setCmd(c_ptr, s_ptr, &pub->TRPYcmd);
+	}else {
+		pub->TRPYcmd.cmd[0] = true;
+		pub->TRPYcmd.cmd[1] = true;
+		pub->TRPYcmd.cmd[2] = true;
+		pub->TRPYcmd.cmd[3] = true;
+		pub->TRPYcmd.thrust = 0;
+	}
 
 	return pub;
 }
@@ -187,7 +195,7 @@ void AscTec_Controller::updateController(struct CTL_DATA * ctl_ptr, struct STATE
 	ctl_ptr->e_ax  = (st_ptr->g_ax) - (st_ptr->ax);
 	ctl_ptr->e_ay = (st_ptr->g_ay) - (st_ptr->ay);
 	ctl_ptr->e_az = (st_ptr->g_az) - (st_ptr->az); 
-	ctl_ptr->e_yaw = (st_ptr->g_ayaw) - (st_ptr->ayaw);
+	ctl_ptr->e_ayaw = (st_ptr->g_ayaw) - (st_ptr->ayaw);
 
 	/* ---- Windup Prevention ---- */
 	ctl_ptr->i_x = limitOutput(ctl_ptr->i_x, INTEGRAL_LIMIT, -INTEGRAL_LIMIT);
@@ -211,7 +219,7 @@ pc_asctec_sim::SICmd * AscTec_Controller::setCmd(struct CTL_DATA * ctl_ptr, stru
 	yaw = -(ctl_ptr->k_val.kpyaw * (ctl_ptr->e_yaw) + 
 		ctl_ptr->k_val.kiyaw * (ctl_ptr->i_yaw) + 
 		ctl_ptr->k_val.kvyaw * (ctl_ptr->e_vyaw) +
-		ctl_ptr->k_val.kayaw * (ctl_ptr->e_yaw));
+		ctl_ptr->k_val.kayaw * (ctl_ptr->e_ayaw));
 
 	yaw = limitOutput(yaw, YAW_MAX, YAW_MIN);
 	
@@ -233,8 +241,8 @@ pc_asctec_sim::SICmd * AscTec_Controller::setCmd(struct CTL_DATA * ctl_ptr, stru
 
 	pitch = limitOutput(pitch, PITCH_MAX, PITCH_MIN);
 
-	if(!isnan(M_PI * (pitch / PITCH_MAX) / 24)) {
-		TRPY->pitch = M_PI * (pitch / PITCH_MAX) / 24;
+	if(!isnan(M_PI * (pitch / PITCH_MAX) / BOUNDED_ANGLE)) {
+		TRPY->pitch = M_PI * (pitch / PITCH_MAX) / BOUNDED_ANGLE;
 	}
 
 	roll = ((ctl_ptr->k_val.kpx * (ctl_ptr->e_x) + 
@@ -251,8 +259,8 @@ pc_asctec_sim::SICmd * AscTec_Controller::setCmd(struct CTL_DATA * ctl_ptr, stru
 
 	roll = limitOutput(roll, ROLL_MAX, ROLL_MIN);
 
-	if(!isnan(M_PI * (roll / ROLL_MAX) / 24)) {
-		TRPY->roll = M_PI * (roll / ROLL_MAX) / 24;
+	if(!isnan(M_PI * (roll / ROLL_MAX) / BOUNDED_ANGLE)) {
+		TRPY->roll = M_PI * (roll / ROLL_MAX) / BOUNDED_ANGLE;
 	}
 
 	thrust = ctl_ptr->k_val.kpz * (ctl_ptr->e_z) + 
