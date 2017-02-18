@@ -4,9 +4,9 @@
   <arg name="name" value="hummingbird_1" />
   <arg name="quad_frame" value="/vicon/hummingbird_1/hummingbird_1" />
   <arg name="world_frame" value="/odom" />
-  <arg name="loop" value="true" />
+  <arg name="loop" value="false" />
   <arg name="loop_point" value="2" />
-  <arg name="file" value="avoid.txt" />
+  <arg name="file" value="hover.txt" />
   <arg name="tuning_file" value="default_h.yaml" /> 
 
   <!-- Vicon connection node -->
@@ -25,7 +25,7 @@
   <!-- Asctec Position Controller -->
   <node name="asctec_controller" 
         pkg="pc_asctec_sim" 
-        type="controller_test_node"
+        type="controller_node"
 	output="screen">
 
      <rosparam file="$(find pc_asctec_sim)/cfg/$(arg tuning_file)" command="load"/>

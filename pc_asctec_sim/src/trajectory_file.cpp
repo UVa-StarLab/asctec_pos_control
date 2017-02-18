@@ -109,7 +109,7 @@ int main(int argc, char** argv) {
    timer_event.stop();
 
    string quad_name;
-   string file = "avoid.txt";
+   string file = "hover.txt";
    bool repeat = false;
    int rep_point;
    ros::param::get("~loop", repeat);

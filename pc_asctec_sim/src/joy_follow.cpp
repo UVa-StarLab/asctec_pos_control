@@ -232,9 +232,10 @@ int main(int argc, char** argv) {
 	ros::NodeHandle nh;
 	ros::Rate loop_rate = freq;
 
-	ros::param::get("~world_frame", world);
-	ros::param::get("~quad_name", quad_name);
+	ros::param::get("~w_frame", world);
+	ros::param::get("~q_name", quad_name);
 
+	start_pub = nh.advertise<std_msgs::Bool>(quad_name + "/start", 10);
 	traj_pub = nh.advertise<pc_asctec_sim::pc_traj_cmd>(quad_name + "/traj_points", 10);
 	pos_pub = nh.advertise<pc_asctec_sim::pc_goal_cmd>(quad_name + "/pos_goals", 10);
 	border_pub = nh.advertise<visualization_msgs::Marker>(quad_name + "/border", 10);
@@ -257,6 +258,9 @@ int main(int argc, char** argv) {
 
 				//Check exit conditions
 				if(flying && isDone) {
+					std_msgs::Bool start;
+					start.data = true;
+					start_pub.publish(start);
 					state = 1;
 				}
 				break;

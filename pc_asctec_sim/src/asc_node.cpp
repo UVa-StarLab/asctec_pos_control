@@ -108,9 +108,9 @@ int main(int argc, char** argv) {
 	K_DATA k_vals;
 	string name, world_frame, frame;
 
-	ros::param::get("~world_frame", world_frame);
-	ros::param::get("~name", name);
-	ros::param::get("~quad_frame", frame);
+	ros::param::get("~w_frame", world_frame);
+	ros::param::get("~q_name", name);
+	ros::param::get("~q_frame", frame);
 
 	ros::param::get("~kpx", k_vals.kpx); 
 	ros::param::get("~kix", k_vals.kix); 

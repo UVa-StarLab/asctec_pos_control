@@ -152,8 +152,8 @@ void traj_callback(const pc_asctec_sim::pc_traj_cmd::ConstPtr& msg)
 					B(6*j+2,i) = B(6*j+3,i-1);
 					B(6*j+4,i) = B(6*j+5,i-1);      
 				}
-			} 
-		
+			} 		
+
 			point_ct = 0.0;
 			c_time = 0.0;
 			ROS_INFO("New Trajectory with %i points heard!", msg->points);
@@ -168,6 +168,7 @@ void traj_callback(const pc_asctec_sim::pc_traj_cmd::ConstPtr& msg)
 			float t_f = ((t_e - t_s).toNSec());
 			ROS_INFO("Trajectory calculation took %f ms", t_f/1000000);
 			waiting = false;
+
 		}else {
 			ROS_INFO("Error, trajectory has 0 points. Msg ignored");
 		}

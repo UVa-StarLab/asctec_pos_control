@@ -16,10 +16,11 @@
 #define freq 5
 #define maxV 0.2
 #define maxV_T 0.4
-#define TRIGGER_RANGE 0.2
+#define minT 2
+#define TRIGGER_RANGE 1.0
 #define F_HEIGHT 1.25
 #define L_HEIGHT 0.75
-#define REST 0.0
+#define REST 0.5
 
 using namespace std;
 
@@ -131,10 +132,10 @@ int main(int argc, char** argv) {
 	tf::StampedTransform transform;
 	tf::TransformListener listener;
 
-	ros::param::get("~world_frame", world);
-	ros::param::get("~quad_name", quad_name);
+	ros::param::get("~w_frame", world);
+	ros::param::get("~q_name", quad_name);
 	ros::param::get("~ugv_frame", ugv_frame);
-	ros::param::get("~quad_frame", quad_frame);
+	ros::param::get("~q_frame", quad_frame);
 	ros::param::get("~box_frame", box_frame);
 
 	traj_pub = nh.advertise<pc_asctec_sim::pc_traj_cmd>(quad_name + "/traj_points", 10);
@@ -142,7 +143,6 @@ int main(int argc, char** argv) {
 
 	traj_sub = nh.subscribe(quad_name + "/traj_end", 10, trajCallback);
 	joy_sub = nh.subscribe("/joy", 10, joyCallback);
-
 	
 	listener.waitForTransform(world, quad_frame, ros::Time(0), ros::Duration(3.0));
 	listener.waitForTransform(world, box_frame, ros::Time(0), ros::Duration(3.0));
@@ -182,7 +182,7 @@ int main(int argc, char** argv) {
 				// Transition fwd - Waits for joy signal "flying" = true, moves quad + mirror to start height
 				if(isDone && flying) {
 					float tTravel = sqrt(pow(quad_x,2) + pow(quad_y,2) + pow((F_HEIGHT - quad_z),2)) / maxV;
-					tTravel = limit(tTravel, 10, 1);
+					tTravel = limit(tTravel, 10, minT);
 					sendTrajectory(tTravel, 0.0, 0.0, 0.0, F_HEIGHT, 0.0);
 
 					ROS_INFO("Taking off to 0.0, 0.0, %f, time of travel: %f s", F_HEIGHT, tTravel);
@@ -194,7 +194,7 @@ int main(int argc, char** argv) {
 				// Transition fwd - Waits for joy signal "over_box" = true, moves quad + mirror to box
 				if(isDone && over_box) {
 					float tTravel = sqrt(pow(quad_x,2) + pow(quad_y,2) + pow((F_HEIGHT - quad_z),2)) / maxV;
-					tTravel = limit(tTravel, 10, 1);
+					tTravel = limit(tTravel, 10, minT);
 					sendTrajectory(tTravel, 0.0, box_x, box_y, F_HEIGHT, 0.0);
 
 					ROS_INFO("Hovering over target, time of travel: %f s", tTravel);
@@ -203,7 +203,7 @@ int main(int argc, char** argv) {
 				// Transition bwd - Waits for joy signal "flying" = false, moves quad + mirror to resting height
 				}else if(isDone && !flying) {
 					float tTravel = sqrt(pow(quad_x,2) + pow(quad_y,2) + pow((REST - quad_z),2)) / maxV;
-					tTravel = limit(tTravel, 10, 1);
+					tTravel = limit(tTravel, 10, minT);
 					sendTrajectory(tTravel, 0.0, 0.0, 0.0, REST, 0.0);
 
 					ROS_INFO("Returning to rest, time of travel: %f s", tTravel);
@@ -215,7 +215,7 @@ int main(int argc, char** argv) {
 				// Transition fwd - Waits for joy signal "lower_box" = true, moves quad + mirror down to hide box
 				if(isDone && lower_box) {
 					float tTravel = sqrt(pow(quad_x,2) + pow(quad_y,2) + pow((L_HEIGHT - quad_z),2)) / maxV;
-					tTravel = limit(tTravel, 10, 1);
+					tTravel = limit(tTravel, 10, minT);
 					sendTrajectory(tTravel, 0.0, box_x, box_y, L_HEIGHT, 0.0);
 
 					ROS_INFO("Setting up mirror demo...");
@@ -224,7 +224,7 @@ int main(int argc, char** argv) {
 				// Transition bwd - Waits for joy signal "over_box" = false, moves quad + mirror back to center
 				}else if(isDone && !over_box) {
 					float tTravel = sqrt(pow(quad_x,2) + pow(quad_y,2) + pow((F_HEIGHT - quad_z),2)) / maxV;
-					tTravel = limit(tTravel, 10, 1);
+					tTravel = limit(tTravel, 10, minT);
 					sendTrajectory(tTravel, 0.0, 0, 0, F_HEIGHT, 0.0);
 				
 					ROS_INFO("Returning to center...");
@@ -234,8 +234,8 @@ int main(int argc, char** argv) {
 
 			case 3:
 				// Transition fwd - Waits for trigger signal and reveals obstacle
-				if(isDone) {
-					float trigger = sqrt(pow((box_x - quad_x),2) + pow((box_y - quad_y),2));
+				if(isDone && lower_box) {
+					float trigger = sqrt(pow((ugv_x - quad_x),2) + pow((ugv_y - quad_y),2));
 					if(trigger < TRIGGER_RANGE) {
 						float tTravel = sqrt(pow(quad_x,2) + pow(quad_y,2) + pow((F_HEIGHT - quad_z),2)) / maxV_T;
 						tTravel = limit(tTravel, 10, 0.25);
@@ -248,7 +248,7 @@ int main(int argc, char** argv) {
 				// Transition bwd - Waits for joy signal "lower_box" = false, moves back up
 				}else if(isDone && !lower_box) {
 					float tTravel = sqrt(pow(quad_x,2) + pow(quad_y,2) + pow((F_HEIGHT - quad_z),2)) / maxV;
-					tTravel = limit(tTravel, 10, 1);
+					tTravel = limit(tTravel, 10, minT);
 					sendTrajectory(tTravel, 0.0, box_x, box_y, F_HEIGHT, 0.0);
 
 					ROS_INFO("Joy reset, revealing obstacle...");
@@ -260,7 +260,7 @@ int main(int argc, char** argv) {
 				// Transition bwd - Waits for reset signal "flying" = false, move back to center
 				if(isDone && !flying) {
 					float tTravel = sqrt(pow(quad_x,2) + pow(quad_y,2) + pow((REST - quad_z),2)) / maxV;
-					tTravel = limit(tTravel, 10, 1);
+					tTravel = limit(tTravel, 10, minT);
 					sendLandTrajectory(tTravel);
 
 					ROS_INFO("Landing at center...");
