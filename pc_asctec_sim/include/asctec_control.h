@@ -133,20 +133,20 @@ class AscTec_Controller
 		void setParams(struct K_DATA * k_ptr);
 	private:
 
-		void updatePosition(struct STATE_DATA * st_ptr, tf::StampedTransform * transform);
-		void freeGoal(struct STATE_DATA * st_ptr);
-		void updateGoal(struct GOAL_DATA * g_ptr, struct STATE_DATA * st_ptr);
-		void updateController(struct CTL_DATA * ctl_ptr, struct STATE_DATA * st_ptr);
-		pc_asctec_sim::SICmd * setCmd(struct CTL_DATA * ctl_ptr, struct STATE_DATA * st_ptr, pc_asctec_sim::SICmd * TRPY);
-		pc_asctec_sim::pc_state * fillState(struct STATE_DATA * st_ptr, pc_asctec_sim::pc_state * out_ptr);
-		void initAsctec(struct STATE_DATA * pos_ptr, struct CTL_DATA * ctl_ptr);
+		void updatePosition(tf::StampedTransform * transform);
+		void freeGoal();
+		void updateGoal(struct GOAL_DATA * g_ptr);
+		void updateController();
+		pc_asctec_sim::SICmd * setCmd(pc_asctec_sim::SICmd * TRPY);
+		pc_asctec_sim::pc_state * fillState(pc_asctec_sim::pc_state * out_ptr);
+		void initAsctec();
 		
-		void checkBattery(struct STATE_DATA * state_ptr);
-		pc_asctec_sim::pc_feedback * checkGoal(struct CTL_DATA * ctl_ptr, struct STATE_DATA * st_ptr, pc_asctec_sim::pc_feedback * on_goal);
+		void checkBattery();
+		pc_asctec_sim::pc_feedback * checkGoal(pc_asctec_sim::pc_feedback * on_goal);
 		float limitOutput(float input, float ceiling, float floor);
 
 		float battery;
-		CTL_DATA controller, *c_ptr;
-		STATE_DATA state, *s_ptr;
+		CTL_DATA c;
+		STATE_DATA st;
 };
 #endif

@@ -288,7 +288,6 @@ int main(int argc, char** argv) {
 
 					if(!isFlying) {
 						ROS_INFO("Landing!");
-						nextTraj = false;
 						state = waitStart;
 
 						sendLandTrajectory();

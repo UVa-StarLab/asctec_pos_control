@@ -4,7 +4,7 @@
   <arg name="q_name" value="hummingbird_2" />
   <arg name="q_frame" value="/vicon/hummingbird_2/hummingbird_2" />
   <arg name="w_frame" value="/odom" />
-  <arg name="ugv_frame" value="/vicon/jackal2/jackal2" />
+  <arg name="ugv_frame" value="/vicon/jackal1/jackal1" />
   <arg name="tuning_file" value="default_h.yaml" />  
 
   <!-- Vicon connection node -->
@@ -27,9 +27,9 @@
   <node name="asctec_controller" pkg="pc_asctec_sim" type="controller_node" output="screen">
      <rosparam file="$(find pc_asctec_sim)/cfg/$(arg tuning_file)" command="load"/>
 
-     <param name="name" value="$(arg q_name)"/>
-     <param name="world_frame" value="$(arg w_frame)"/>
-     <param name="quad_frame" value="$(arg q_frame)"/>
+     <param name="q_name" value="$(arg q_name)"/>
+     <param name="w_frame" value="$(arg w_frame)"/>
+     <param name="q_frame" value="$(arg q_frame)"/>
 
   </node>
 

@@ -146,7 +146,7 @@ class AscTec_Controller
 		float limitOutput(float input, float ceiling, float floor);
 
 		float battery;
-		CTL_DATA controller, *c_ptr;
-		STATE_DATA state, *s_ptr;
+		CTL_DATA c, *c_ptr;
+		STATE_DATA st, *s_ptr;
 };
 #endif

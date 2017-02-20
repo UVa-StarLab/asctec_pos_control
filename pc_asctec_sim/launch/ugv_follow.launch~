@@ -3,9 +3,8 @@
   <arg name="port" value="/dev/ttyUSB0" />
   <arg name="q_name" value="hummingbird_2" />
   <arg name="q_frame" value="/vicon/hummingbird_2/hummingbird_2" />
-  <arg name="ugv_frame" value="/vicon/jackal1/jackal1" />
-  <arg name="box_frame" value="/vicon/box/box" />
   <arg name="w_frame" value="/odom" />
+  <arg name="ugv_frame" value="/vicon/jackal1/jackal1" />
   <arg name="tuning_file" value="default_h.yaml" />  
 
   <!-- Vicon connection node -->
@@ -15,7 +14,7 @@
   <node name="joy_controller" pkg="joy" type="joy_node" output="screen"/>
 
   <!-- Asctec TRPY Controller -->
-  <node pkg="asctec_ll_updated" name="$(arg q_name)" type="asctec_ll_updated_node" output="screen" respawn="false">
+  <node pkg="asctec_ll_updated" name="$(arg q_name)" type="asctec_ll_updated_node" output="screen" respawn="true">
      <param name="port" value="$(arg port)"/>
      <param name="ll_status_rate" value="1"/>
      <param name="imu_calc_data_rate" value="0"/>
@@ -25,11 +24,7 @@
   </node>
 
   <!-- Asctec Position Controller -->
-  <node name="asctec_controller" 
-	pkg="pc_asctec_sim" 
-	type="controller_node" 
-	output="screen">
-
+  <node name="asctec_controller" pkg="pc_asctec_sim" type="controller_node" output="screen">
      <rosparam file="$(find pc_asctec_sim)/cfg/$(arg tuning_file)" command="load"/>
 
      <param name="q_name" value="$(arg q_name)"/>
@@ -41,23 +36,22 @@
   <!-- Trajectory Generator -->
   <node name="waypoint_server" 
         pkg="pc_asctec_sim" 
-        type="accTraj_node">
+        type="accTaj_node" 
+        output="screen">
 
      <param name="q_name" value="$(arg q_name)"/>
      <param name="w_frame" value="$(arg w_frame)"/>
   </node>
 
-  <!-- Mirror Hacker -->
-  <node name="mir_hacker" 
+  <!-- UGV Tracker -->
+  <node name="ugv_tracker" 
         pkg="pc_asctec_sim" 
-        type="mir_hack" 
+        type="ugv_tracker" 
         output="screen">
 
      <param name="q_name" value="$(arg q_name)"/>
-     <param name="q_frame" value="$(arg q_frame)"/>
-     <param name="box_frame" value="$(arg box_frame)"/>
-     <param name="ugv_frame" value="$(arg ugv_frame)"/>
      <param name="w_frame" value="$(arg w_frame)"/>
+     <param name="ugv_frame" value="$(arg ugv_frame)"/>
   </node>
 
 </launch>

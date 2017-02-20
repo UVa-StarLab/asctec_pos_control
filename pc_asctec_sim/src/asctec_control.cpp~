@@ -318,50 +318,50 @@ void AscTec_Controller::initAsctec()
 	c.e_vyaw = 0.0;
 
 	/* ----- Position Init ----- */
-	st.x = 0.0;
-	st.y = 0.0;
-	st.z = 0.0;
-	st.yaw = 0.0;
+	st_ptr.x = 0.0;
+	st_ptr.y = 0.0;
+	st_ptr.z = 0.0;
+	st_ptr.yaw = 0.0;
 
-	st.x_p = 0.0;
-	st.y_p = 0.0;
-	st.z_p = 0.0;
-	st.yaw_p = 0.0;
+	st_ptr.x_p = 0.0;
+	st_ptr.y_p = 0.0;
+	st_ptr.z_p = 0.0;
+	st_ptr.yaw_p = 0.0;
 
-	st.vx = 0.0;
-	st.vy = 0.0;
-	st.vz = 0.0;
-	st.vyaw = 0.0;
+	st_ptr.vx = 0.0;
+	st_ptr.vy = 0.0;
+	st_ptr.vz = 0.0;
+	st_ptr.vyaw = 0.0;
 
-	st.g_x = 0.0;
-	st.g_y = 0.0;
-	st.g_z = 0.0;
-	st.g_yaw = 0.0;
+	st_ptr.g_x = 0.0;
+	st_ptr.g_y = 0.0;
+	st_ptr.g_z = 0.0;
+	st_ptr.g_yaw = 0.0;
 
-	st.g_vx = 0.0;
-	st.g_vy = 0.0;
-	st.g_vz = 0.0;
-	st.g_vyaw = 0.0;
+	st_ptr.g_vx = 0.0;
+	st_ptr.g_vy = 0.0;
+	st_ptr.g_vz = 0.0;
+	st_ptr.g_vyaw = 0.0;
 
-	st.ax_n = 0;
-	st.ay_n = 0;
-	st.az_n = 0;
-	st.ayaw_n = 0;
+	st_ptr.ax_n = 0;
+	st_ptr.ay_n = 0;
+	st_ptr.az_n = 0;
+	st_ptr.ayaw_n = 0;
 
-	st.yaw_counter = 0;
+	st_ptr.yaw_counter = 0;
 
 	for(int i = 0; i < BUFFER; i++) {
-		st.ax_buf[i] = 0;
-		st.ay_buf[i] = 0;
-		st.az_buf[i] = 0;
-		st.ayaw_buf[i] = 0;
+		st_ptr.ax_buf[i] = 0;
+		st_ptr.ay_buf[i] = 0;
+		st_ptr.az_buf[i] = 0;
+		st_ptr.ayaw_buf[i] = 0;
 	}
 
-	st.g_range = 0.05;
-	st.wait_time = 0.0;
-	st.waiting = false;
-	st.g_arrival = false;
-	st.g_id = "Init";
+	st_ptr.g_range = 0.05;
+	st_ptr.wait_time = 0.0;
+	st_ptr.waiting = false;
+	st_ptr.g_arrival = false;
+	st_ptr.g_id = "Init";
 }
 
 void AscTec_Controller::checkBattery()
@@ -382,14 +382,14 @@ pc_asctec_sim::pc_feedback * AscTec_Controller::checkGoal(pc_asctec_sim::pc_feed
 			(c.e_y) * (c.e_y) + 
 			(c.e_z) * (c.e_z)); 
 
-	if((distance <= (st.g_range)) && not (st.g_arrival)) {
-		st.wait_start = ros::Time::now().toSec(); 
-		st.waiting = true;  
-		st.g_arrival = true;
+	if((distance <= (st_ptr.g_range)) && not (st_ptr.g_arrival)) {
+		st_ptr.wait_start = ros::Time::now().toSec(); 
+		st_ptr.waiting = true;  
+		st_ptr.g_arrival = true;
 	}
-	if(st.waiting) {
-		if((ros::Time::now().toSec() - st.wait_start) >= st.wait_time) {
-			st.waiting = false;
+	if(st_ptr.waiting) {
+		if((ros::Time::now().toSec() - st_ptr.wait_start) >= st_ptr.wait_time) {
+			st_ptr.waiting = false;
 			on_goal->goal_id = st.g_id;
 			on_goal->event = ros::Time::now();
 			on_goal->arrived = true;

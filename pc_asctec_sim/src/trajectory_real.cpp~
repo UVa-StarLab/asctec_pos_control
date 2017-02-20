@@ -189,8 +189,8 @@ int main(int argc, char** argv) {
 	ros::Timer timer_event = nh.createTimer(ros::Duration(3.0), timerCallback, true);
 	timer_event.stop();
 
-	ros::param::get("~q_name", quad_name);
-	ros::param::get("~w_frame", world);
+	ros::param::get("~name", quad_name);
+	ros::param::get("~world", world);
 	pos_goal = nh.advertise<pc_asctec_sim::pc_goal_cmd>(quad_name + "/pos_goals", 10);
 	viz_goal = nh.advertise<geometry_msgs::PointStamped>(quad_name + "/viz_goals",10);
 	trail_pub = nh.advertise<visualization_msgs::Marker>(quad_name + "/trajectory_trail",10);
