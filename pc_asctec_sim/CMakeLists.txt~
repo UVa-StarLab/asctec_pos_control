@@ -134,7 +134,6 @@ include_directories(
 add_library(pc_asctec_sim
   src/asctec_control.cpp
   src/trajectory_accel.cpp
-  src/asctec_quad.cpp
 )
 
 ## Add cmake target dependencies of the library

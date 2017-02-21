@@ -26,13 +26,15 @@
 using namespace std;
 
 #define CONTROL_RATE 50.0
+#define dT 1/CONTROL_RATE
+
 #define BUFFER 16
 
 #define INTEGRAL_LIMIT 5.0
 
 #define MASS 0.7 //in kg
 #define G_TH 25.0
-#define G 9.81
+#define Gr 9.81
 
 #define BOUNDED_ANGLE 24.0 // RP angle divided by this number - Started at 24
 
@@ -127,12 +129,14 @@ typedef struct STATE_DATA
 class AscTec_Controller
 {
 	public:
-		AscTec_Controller();
+		AscTec_Controller(string q_frame, string w_frame, struct K_DATA * kvals);
 		~AscTec_Controller();
 		struct PUB_DATA * runAsctec(struct PUB_DATA * pub, struct GOAL_DATA * goal_in, tf::StampedTransform * transform);
 		void setParams(struct K_DATA * k_ptr);
-	private:
 
+		string q_frame, w_frame;
+
+	private:
 		void updatePosition(tf::StampedTransform * transform);
 		void freeGoal();
 		void updateGoal(struct GOAL_DATA * g_ptr);
@@ -140,7 +144,6 @@ class AscTec_Controller
 		pc_asctec_sim::SICmd * setCmd(pc_asctec_sim::SICmd * TRPY);
 		pc_asctec_sim::pc_state * fillState(pc_asctec_sim::pc_state * out_ptr);
 		void initAsctec();
-		
 		void checkBattery();
 		pc_asctec_sim::pc_feedback * checkGoal(pc_asctec_sim::pc_feedback * on_goal);
 		float limitOutput(float input, float ceiling, float floor);

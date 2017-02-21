@@ -147,6 +147,8 @@ int main(int argc, char** argv) {
 	listener.waitForTransform(w_frame, q_frame, ros::Time(0), ros::Duration(3.0));
 
 	initTrail(w_frame);
+	
+	asc.setParams(&k_vals);
 
 	listener.lookupTransform(w_frame, q_frame, ros::Time(0), transform);
 	goal->goal.x = transform.getOrigin().x();

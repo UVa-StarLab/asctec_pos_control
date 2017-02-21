@@ -1,0 +1,10 @@
+#include "asctec_quad.h"
+
+AscTec_Quad::AscTec_Quad(string qframe, string wframe)
+{	
+	q_frame = qframe;
+	w_frame = wframe;
+
+	battery = BATTERY_FULL;
+	initAsctec();
+}

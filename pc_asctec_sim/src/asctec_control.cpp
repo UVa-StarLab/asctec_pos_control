@@ -1,8 +1,12 @@
 #include <asctec_control.h>
 
-AscTec_Controller::AscTec_Controller()
+AscTec_Controller::AscTec_Controller(string qframe, string wframe, struct K_DATA * kvals)
 {	
+	q_frame = qframe;
+	w_frame = wframe;
+
 	battery = BATTERY_FULL;
+	setParams(kvals);
 	initAsctec();
 }
 
