@@ -1,9 +1,9 @@
-#ifndef TRAJECTORYACCEL_H
-#define TRAJECTORYACCEL_H
+#ifndef ATRAJ_H
+#define ATRAJ_H
 
 #include <ros/ros.h>
 
-#include <std_msgs/Empty.h>
+#include <std_msgs/Bool.h>
 #include <geometry_msgs/PointStamped.h>
 
 #include <pc_asctec_sim/pc_goal_cmd.h>
@@ -21,8 +21,6 @@
 #include <Eigen/Dense>
 
 #define BUF 3
-
-#define dt 0.05
 
 using namespace std;
 using Eigen::MatrixXd;
@@ -89,9 +87,6 @@ class Trajectory_Accel
 		~Trajectory_Accel();
 
 		bool getComplete();			
-		bool getDelayed();
-		double getDelayTime();
-		void setDelayed(bool val);
 		void setStarted(bool val);
 
 		struct WAYPOINT * updateWaypoint(struct WAYPOINT * goal);
@@ -116,7 +111,7 @@ class Trajectory_Accel
 
 		float dt;
 		double c_time;
-		double delay_time;
+		ros::Time t0;
 		int point;
 		int points;
 		bool isComplete;

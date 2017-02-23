@@ -7,6 +7,8 @@ PUB_DATA * runtime = &pub;
 GOAL_DATA g_data;
 GOAL_DATA * goal = &g_data;
 
+geometry_msgs::Twist xy;
+
 bool fb_prev = false;
 bool fb_flag = false;
 
@@ -36,9 +38,20 @@ void configCallback(const pc_asctec_sim::ascTunerConfig &config, uint32_t level)
 	runtime->k_val.kayaw = config.kayaw;
 }
 
+void xyCallback(const geometry_msgs::Twist::ConstPtr& msg)
+{
+	xy = *msg;
+}
+
+void modeCallback(const std_msgs::Bool::ConstPtr& msg)
+{
+	runtime->xyFree = msg->data;
+}
+
 void startCallback(const std_msgs::Bool::ConstPtr& msg)
 {
 	runtime->running = msg->data;
+	runtime->xyFree = false;
 	ROS_INFO("Start signal!");
 }
 
@@ -74,8 +87,23 @@ void initTrail(string str_frame)
 	trail.points.push_back(vis_trail);
 }
 
+float limitOutput(float input, float ceiling, float floor) 
+{
+	if(input > ceiling) {
+		return ceiling;
+	}else if(input < floor) {
+		return floor;
+	}else {
+		return input;
+	}
+}
+
 void publishData()
 {
+	if(runtime->xyFree) {
+		runtime->TRPYcmd.roll = limitOutput(xy.angular.x,ROLL_MAX,ROLL_MIN)/XY_LIMIT;
+		runtime->TRPYcmd.pitch = limitOutput(xy.angular.y,PITCH_MAX,PITCH_MIN)/XY_LIMIT;
+	}
 	cmd_pub.publish(runtime->TRPYcmd);
 	state_pub.publish(runtime->state);
 	if(fb_flag) {
@@ -135,6 +163,8 @@ int main(int argc, char** argv) {
 	ros::Subscriber goal_sub = nh.subscribe(q_name + "/pos_goals", 1, goalCallback);
 	ros::Subscriber ll_sub = nh.subscribe(q_name + "/ll_status", 1, llCallback);
 	ros::Subscriber run_sub = nh.subscribe(q_name + "/start", 1, startCallback);
+	ros::Subscriber mode_sub = nh.subscribe(q_name + "/cmd_mode", 1, modeCallback);
+	ros::Subscriber xy_sub = nh.subscribe(q_name + "/xy_cmds", 5, xyCallback);
 
 	fback_pub = nh.advertise<pc_asctec_sim::pc_feedback>(q_name + "/goal_feedback", 10);
 	cmd_pub = nh.advertise<pc_asctec_sim::SICmd>(q_name + "/cmd_si", 10);

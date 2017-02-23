@@ -47,9 +47,9 @@ void stateCallback(const pc_asctec_sim::pc_state::ConstPtr& msg)
 	q_state = *msg;
 }
 
-void trajCallback(const std_msgs::Empty::ConstPtr& msg)
+void trajCallback(const std_msgs::Bool::ConstPtr& msg)
 {
-	isDone = true;
+	isDone = msg->data;
 }
 
 void joyCallback(const sensor_msgs::Joy::ConstPtr& msg)

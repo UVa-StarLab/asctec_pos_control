@@ -1,4 +1,4 @@
-#include <trajectory_accel.h>
+#include <atraj.h>
 
 Trajectory_Accel::Trajectory_Accel(float d_t)
 {
@@ -25,26 +25,6 @@ Trajectory_Accel::~Trajectory_Accel() {}
 bool Trajectory_Accel::getComplete()
 {
 	return isComplete;
-}
-
-bool Trajectory_Accel::getDelayed()
-{
-	return isDelayed;
-}
-
-double Trajectory_Accel::getDelayTime()
-{
-	return delay_time;
-}
-
-void Trajectory_Accel::setDelayed(bool val)
-{
-	isDelayed = val;
-}
-
-void Trajectory_Accel::setStarted(bool val)
-{
-	isStarted = val;
 }
 
 struct WAYPOINT * Trajectory_Accel::updateWaypoint(struct WAYPOINT * goal)
@@ -92,24 +72,22 @@ struct WAYPOINT * Trajectory_Accel::updateWaypoint(struct WAYPOINT * goal)
 		}
 
 		if((c_time + 0.001) >= T(1,point)) {
-			if(T(0,point) != 0.0 && !isDelayed && !isStarted) {
+			if(T(0,point) != 0.0 && !isDelayed) {
 				isDelayed = true;
-				isStarted = false;
-				delay_time = T(0,point);
+				
+				t0 = ros::Time::now();
 				ROS_INFO("Point %i reached, waiting for %f seconds", point, T(0,point));
+
+			}else if(isDelayed && ((ros::Time::now().toSec() - t0.toSec()) >= T(0,point))) {
+				ROS_INFO("Point %i completed", point);
+				point++;
+				c_time = 0.0;
+				isDelayed = false;
 
 			}else if(T(0,point) == 0.0){
 				ROS_INFO("Point %i reached", point);
 				point++;
 				c_time = 0.0;
-
-			}else if(isStarted) {
-				ROS_INFO("Point %i completed", point);
-				point++;
-				c_time = 0.0;
-
-				isStarted = false;
-				isDelayed = false;
 			}
 		}
 	}else {
@@ -158,14 +136,11 @@ void Trajectory_Accel::initMembers()
   */
 
 	c_time = 0.0;
-	delay_time = 0.0;
-
 	point = 0;
 	points = 0;
 
 	isComplete = true;
 	isDelayed = false;
-	isStarted = false;
 }
 
 void Trajectory_Accel::initAMatrix()
@@ -369,7 +344,6 @@ bool Trajectory_Accel::setBufferedPath()
 
 			T(0,i) = B_buffer.cmd[nextCmd].wait_time[i];
 			T(1,i) = B_buffer.cmd[nextCmd].duration[i];
-	
 		}
 	
 		for(int i = 1; i < points; i++) {

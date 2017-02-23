@@ -1,16 +1,13 @@
 <launch>
 
   <arg name="port" value="/dev/ttyUSB0" />
-  <arg name="q_name" value="hummingbird_2" />
-  <arg name="q_frame" value="/vicon/hummingbird_2/hummingbird_2" />
+  <arg name="q_name" value="hummingbird_1" />
+  <arg name="q_frame" value="/vicon/hummingbird_1/hummingbird_1" />
   <arg name="w_frame" value="/odom" />
-  <arg name="obs_frame" value="/vicon/tiki/tiki" />
   <arg name="tuning_file" value="default_h.yaml" />  
 
-  <!-- Vicon connection node -->
-  <include file="$(find vicon_bridge)/launch/vicon.launch" />
 
-  <!-- Joy Controller xbox 360 -->
+  <include file="$(find vicon_bridge)/launch/vicon.launch" />
   <node name="joy_controller" pkg="joy" type="joy_node" output="screen"/>
 
   <!-- Asctec TRPY Controller -->
@@ -23,35 +20,26 @@
      <param name="gps_data_advanced_rate" value="0"/>
   </node>
 
-  <!-- Asctec Position Controller -->
-  <node name="asctec_controller" pkg="pc_asctec_sim" type="controller_node" output="screen">
+  <!-- Asctec Quad Node -->
+  <node name="asctec_controller" 
+	pkg="pc_asctec_sim" 
+	type="quad_node" 
+	output="screen">
+
      <rosparam file="$(find pc_asctec_sim)/cfg/$(arg tuning_file)" command="load"/>
-
      <param name="q_name" value="$(arg q_name)"/>
-     <param name="w_frame" value="$(arg w_frame)"/>
      <param name="q_frame" value="$(arg q_frame)"/>
-
+     <param name="w_frame" value="$(arg w_frame)"/>
   </node>
 
-  <!-- Trajectory Generator -->
-  <node name="waypoint_server" 
+  <!-- Joy Follower -->
+  <node name="joy_follow" 
         pkg="pc_asctec_sim" 
-        type="accTraj_node" 
+        type="joy_follower" 
         output="screen">
 
      <param name="q_name" value="$(arg q_name)"/>
      <param name="w_frame" value="$(arg w_frame)"/>
-  </node>
-
-  <!-- Avoider -->
-  <node name="avoider" 
-        pkg="pc_asctec_sim" 
-        type="avoid_node" 
-        output="screen">
-
-     <param name="q_name" value="$(arg q_name)"/>
-     <param name="w_frame" value="$(arg w_frame)"/>
-     <param name="obs_frame" value="$(arg obs_frame)"/>
   </node>
 
 </launch>

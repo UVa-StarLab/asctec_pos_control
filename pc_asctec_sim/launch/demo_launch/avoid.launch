@@ -36,7 +36,7 @@
   <!-- Trajectory Generator -->
   <node name="waypoint_server" 
         pkg="pc_asctec_sim" 
-        type="accTraj_node" 
+        type="aTraj_node" 
         output="screen">
 
      <param name="q_name" value="$(arg q_name)"/>

@@ -6,7 +6,6 @@ project(pc_asctec_sim)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
   geometry_msgs
-  quadrotor_msgs
   sensor_msgs
   std_msgs
   tf
@@ -79,7 +78,6 @@ add_message_files(
 generate_messages(
   DEPENDENCIES
   geometry_msgs  
-  quadrotor_msgs
   std_msgs
 )
 
@@ -114,7 +112,7 @@ generate_dynamic_reconfigure_options(
 catkin_package(
   INCLUDE_DIRS include
   LIBRARIES pc_asctec_sim
-  CATKIN_DEPENDS geometry_msgs quadrotor_msgs roscpp message_runtime
+  CATKIN_DEPENDS geometry_msgs roscpp message_runtime
   DEPENDS system_lib Eigen
 )
 
@@ -133,7 +131,7 @@ include_directories(
 ## Declare a C++ library
 add_library(pc_asctec_sim
   src/asctec_control.cpp
-  src/trajectory_accel.cpp
+  src/atraj.cpp
   src/asctec_quad.cpp
 )
 
@@ -143,16 +141,18 @@ add_library(pc_asctec_sim
 # add_dependencies(pc_asctec_sim ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Declare a C++ executable
-add_executable(quad_node src/quad_test.cpp)
-add_executable(controller_node src/asc_node.cpp)
-add_executable(accTraj_node src/accTraj_node.cpp)
+add_executable(quad_node src/quad_node.cpp)
+add_executable(controller_node src/controller_node.cpp)
+add_executable(aTraj_node src/atraj_node.cpp)
 add_executable(trajectory_file_node src/trajectory_file.cpp)
 add_executable(trajectory_real_node src/trajectory_real.cpp)
+add_executable(tf_tester src/tf_tester.cpp)
 
-add_executable(ugv_tracker src/ugv_track.cpp)
-add_executable(joy_follower src/joy_follow.cpp)
-add_executable(mir_hack src/mir_hack.cpp)
-add_executable(avoid_node src/obs_avoid.cpp)
+add_executable(ugv_tracker demo/ugv_track.cpp)
+add_executable(joy_follower demo/joy_follow.cpp)
+add_executable(mir_hack demo/mir_hack.cpp)
+add_executable(avoid_node demo/obs_avoid.cpp)
+add_executable(xy_node demo/xy_follow.cpp)
 
 ## Add cmake target dependencies of the executable
 ## same as for the library above
@@ -160,14 +160,16 @@ add_dependencies(quad_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED
 add_dependencies(quad_node ${${PROJECT_NAME}_gencfg} ${catkin_EXPORTED_TARGETS})
 add_dependencies(controller_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 add_dependencies(controller_node ${${PROJECT_NAME}_gencfg} ${catkin_EXPORTED_TARGETS})
-add_dependencies(accTraj_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(aTraj_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 add_dependencies(trajectory_file_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 add_dependencies(trajectory_real_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(tf_tester ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 add_dependencies(ugv_tracker ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 add_dependencies(joy_follower ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 add_dependencies(mir_hack ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 add_dependencies(avoid_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(xy_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Specify libraries to link a library or executable target against
 target_link_libraries(quad_node
@@ -176,7 +178,7 @@ target_link_libraries(quad_node
 target_link_libraries(controller_node
   ${catkin_LIBRARIES}
 )
-target_link_libraries(accTraj_node
+target_link_libraries(aTraj_node
   ${catkin_LIBRARIES}
   ${Eigen_LIBRARIES}
 )
@@ -188,6 +190,11 @@ target_link_libraries(trajectory_real_node
   ${catkin_LIBRARIES}
   ${Eigen_LIBRARIES}
 )
+target_link_libraries(tf_tester
+  ${catkin_LIBRARIES}
+)
+
+
 target_link_libraries(ugv_tracker
   ${catkin_LIBRARIES}
 )
@@ -198,6 +205,9 @@ target_link_libraries(mir_hack
   ${catkin_LIBRARIES}
 )
 target_link_libraries(avoid_node
+  ${catkin_LIBRARIES}
+)
+target_link_libraries(xy_node
   ${catkin_LIBRARIES}
 )
 

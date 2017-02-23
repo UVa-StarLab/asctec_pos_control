@@ -1,12 +1,12 @@
-#include <trajectory_accel.h>
-#include "trajectory_accel.cpp"
+#include <atraj.h>
+#include "atraj.cpp"
 
 #define freq 20.0
 #define dt 1/freq
 
 ros::Timer timer_event;
 
-Trajectory_Accel accTraj;
+Trajectory_Accel *accTraj;
 pc_asctec_sim::pc_state q_state;
 
 string q_name, world;
@@ -31,14 +31,6 @@ void pathCallback(const pc_asctec_sim::pc_traj_cmd::ConstPtr& msg)
 void stateCallback(const pc_asctec_sim::pc_state::ConstPtr& msg) 
 {
 	q_state = *msg;
-}
-
-void timerCallback(const ros::TimerEvent&) {
-	isTiming = false;
-	accTraj->setDelayed(false);
-	accTraj->setStarted(true);
-
-	timer_event.stop();
 }
 
 void init_trail(void)
@@ -89,16 +81,13 @@ int main(int argc, char** argv) {
 	ros::NodeHandle nh;
 	ros::Rate rate(freq);
 
-	timer_event = nh.createTimer(ros::Duration(3.0), timerCallback, true);
-	timer_event.stop();
-
 	ros::param::get("~q_name", q_name);
 	ros::param::get("~w_frame", world);
 
 	ros::Subscriber path_sub = nh.subscribe(q_name + "/traj_points", 1, pathCallback);
 	ros::Subscriber state_sub = nh.subscribe(q_name + "/state", 10, stateCallback);
 
-	ros::Publisher end_pub = nh.advertise<std_msgs::Empty>(q_name + "/traj_end",10);
+	ros::Publisher end_pub = nh.advertise<std_msgs::Bool>(q_name + "/traj_end",10);
 	ros::Publisher goal_pub = nh.advertise<pc_asctec_sim::pc_goal_cmd>(q_name + "/pos_goals", 10);
 	trail_pub = nh.advertise<visualization_msgs::Marker>(q_name + "/trajectory_trail",10);
 	viz_pub = nh.advertise<geometry_msgs::PointStamped>(q_name + "/viz_goals",10);
@@ -113,22 +102,17 @@ int main(int argc, char** argv) {
 
 	while(ros::ok()) {
 		ros::spinOnce();
-		if(!accTraj.getComplete()) {
-			if(!accTraj.getDelayed()) {
-				W_ptr = accTraj.updateWaypoint(W_ptr);
-				if(W_ptr->isValid) {
-					goal_pub.publish(W_ptr->goal);
-				}
-			}else if(accTraj.getDelayed() && !isTiming) {
-				timer_event.setPeriod(ros::Duration(accTraj.getDelayTime(), true));
-				timer_event.start();
-				isTiming = true;
+		if(!accTraj->getComplete()) {
+			W_ptr = accTraj->updateWaypoint(W_ptr);
+			if(W_ptr->isValid) {
+				goal_pub.publish(W_ptr->goal);
 			}
-
-		}else {
-			std_msgs::Empty end;
-			end_pub.publish(end);
 		}
+
+		std_msgs::Bool end;
+		end.data = accTraj->getComplete();
+		end_pub.publish(end);
+
 		publish_trail(W_ptr->goal.x, W_ptr->goal.y, W_ptr->goal.z);
 		rate.sleep();
 	}

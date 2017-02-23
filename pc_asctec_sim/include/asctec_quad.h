@@ -2,7 +2,7 @@
 #define ASCTECQUAD_H
 
 #include "asctec_control.h"
-#include "trajectory_accel.h"
+#include "atraj.h"
 
 /* --------------- Data Structure Definitions ------------ */
 typedef struct TRAIL
@@ -12,7 +12,7 @@ typedef struct TRAIL
 
 typedef struct QUAD_OUT
 {
-	bool isComplete, startTimer;
+	bool isComplete, startTimer, goalUpdated;
 	float time;
 	pc_asctec_sim::SICmd TRPYcmd;
 	pc_asctec_sim::pc_state state;
@@ -22,12 +22,14 @@ typedef struct QUAD_OUT
 
 typedef struct QUAD_CMD
 {
-	bool start,stopTimer,newPath;
+	bool start, stopTimer, newPath, xyFree;
 	float battery;
 
 	path_type type;
 	pc_asctec_sim::pc_traj_cmd f_path;
+	geometry_msgs::Twist xyCmd;
 	K_DATA kvals;
+	GOAL_DATA gNew;
 
 }quad_cmd;
 
@@ -37,7 +39,11 @@ class AscTec_Quad
 	public:
 		AscTec_Quad(string qframe, string wframe, float dt, struct K_DATA * kvals);
 		QUAD_OUT * runQuad(QUAD_CMD * cmd, tf::StampedTransform * transform);
+		bool setQuadGoal(struct GOAL_DATA * g);
+
+		string qframe_, wframe_;
 	private:
+
 		AscTec_Controller controller;
 		Trajectory_Accel accTraj;
 		PUB_DATA *P_ptr;

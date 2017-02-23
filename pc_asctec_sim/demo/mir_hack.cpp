@@ -41,9 +41,9 @@ string world, quad_name, quad_frame, box_frame, ugv_frame;
 ros::Publisher traj_pub, start_pub;
 ros::Subscriber traj_sub, joy_sub;
 
-void trajCallback(const std_msgs::Empty::ConstPtr& msg)
+void trajCallback(const std_msgs::Bool::ConstPtr& msg)
 {
-	isDone = true;
+	isDone = msg->data;
 }
 
 void joyCallback(const sensor_msgs::Joy::ConstPtr& msg)

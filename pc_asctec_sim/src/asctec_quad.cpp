@@ -3,6 +3,9 @@
 AscTec_Quad::AscTec_Quad(string qframe, string wframe, float dt, struct K_DATA * kvals):
 controller(qframe, wframe, kvals), accTraj(dt) 
 {
+	qframe_ = qframe;
+	wframe_ = wframe;
+
 	P_ptr = new PUB_DATA;
 	W_ptr = new WAYPOINT;
 	Q_ptr = new QUAD_OUT;
@@ -10,28 +13,29 @@ controller(qframe, wframe, kvals), accTraj(dt)
 
 QUAD_OUT * AscTec_Quad::runQuad(QUAD_CMD * cmd, tf::StampedTransform * transform)
 {
+	//Update params, start status, and battery value
 	P_ptr->k_val = cmd->kvals;
 	P_ptr->running = cmd->start;
 	P_ptr->battery = cmd->battery;
+	P_ptr->xyFree = cmd->xyFree;
 
-	if(cmd->stopTimer) {
-		accTraj.setDelayed(false);
-		accTraj.setStarted(true);
-	}
+	//Run controller
+	P_ptr = controller.runAsctec(P_ptr,&goal_,transform);
 
+	//If new trajectory is heard, set and update BMatrix
 	if(cmd->newPath) {
 		NEW_PATH path;
 		path.cmd = cmd->f_path;
 		path.state = P_ptr->state;
 		path.type = buffer;
 		accTraj.setBMatrix(&path);
-		
 	}
 
-	if(!accTraj.getComplete()) {
-		if(!accTraj.getDelayed()) {
+	//Follow trajectory flight path if all axes controlled
+	Q_ptr->isComplete = accTraj.getComplete();
+	if(!cmd->xyFree) {
+		if(!accTraj.getComplete()) {
 			W_ptr = accTraj.updateWaypoint(W_ptr);
-
 			if(W_ptr->isValid) {
 				goal_.goal = W_ptr->goal;
 				goal_.isNew = true;
@@ -39,14 +43,38 @@ QUAD_OUT * AscTec_Quad::runQuad(QUAD_CMD * cmd, tf::StampedTransform * transform
 				Q_ptr->goal.y = W_ptr->goal.y;
 				Q_ptr->goal.z = W_ptr->goal.z;
 			}
-
-		}else if(accTraj.getDelayed() && !cmd->stopTimer) {
-			Q_ptr->startTimer = true;
-			Q_ptr->time = accTraj.getDelayTime();
+		}else {
+			goal_.isNew = false;
 		}
-
-	}else {
-		goal_.isNew = false;
 	}
-	P_ptr = controller.runAsctec(P_ptr,&goal_,transform);
+
+	//Try manual controller setting
+	Q_ptr->goalUpdated = setQuadGoal(&cmd->gNew);
+
+	//Set return state
+	Q_ptr->state = P_ptr->state;
+
+	//Set TRPY command from controller
+	Q_ptr->TRPYcmd = P_ptr->TRPYcmd;
+
+	//Set TRPY controls to XY commands
+	if(cmd->xyFree) {
+		Q_ptr->TRPYcmd.roll = controller.limitOutput(cmd->xyCmd.angular.x,ROLL_MAX,ROLL_MIN)/XY_LIMIT;
+		Q_ptr->TRPYcmd.pitch = controller.limitOutput(cmd->xyCmd.angular.y,PITCH_MAX,PITCH_MIN)/XY_LIMIT;
+	}
+	return Q_ptr;
+}
+
+bool AscTec_Quad::setQuadGoal(struct GOAL_DATA * g)
+{
+	if(accTraj.getComplete() && !P_ptr->xyFree) {
+		if(g->isNew) {
+			controller.updateGoal(g);
+			Q_ptr->goal.x = g->goal.x;
+			Q_ptr->goal.y = g->goal.y;
+			Q_ptr->goal.z = g->goal.z;
+		}
+		return true;
+	}
+	return false;
 }

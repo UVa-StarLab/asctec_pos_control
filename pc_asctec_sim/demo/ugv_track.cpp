@@ -43,9 +43,9 @@ void stateCallback(const pc_asctec_sim::pc_state::ConstPtr& msg)
 	quad_state = *msg;
 }
 
-void trajCallback(const std_msgs::Empty::ConstPtr& msg)
+void trajCallback(const std_msgs::Bool::ConstPtr& msg)
 {
-	isDone = true;
+	isDone = msg->data;
 }
 
 void joyCallback(const sensor_msgs::Joy::ConstPtr& msg)
@@ -161,7 +161,7 @@ void sendLandTrajectory(float time)
 	cmd.y[0] = 0.0;
 	cmd.z[0] = 1.0;
 	cmd.yaw[0] = 0.0;
-	cmd.wait_time[0] = 1.5;
+	cmd.wait_time[0] = 0.5;
 	cmd.duration[0] = time;
 
 	cmd.x[1] = 0.0;
@@ -278,7 +278,7 @@ int main(int argc, char** argv) {
 					float tTravel = sqrt(pow((xNew - quad_state.x),2) + pow((yNew - quad_state.y),2)) / maxV;
 	
 					tTravel = limit(tTravel, 10, 1);
-					sendTrajectory(tTravel, 0.0, xNew, yNew, 1.0, yawNew);
+					sendTrajectory(tTravel, 0.0, xNew, yNew, 1.0, 0.0);		//Yaw controller needs to be tuned!!
 					isDone = false;
 
 					ROS_INFO("Begin tracking of UGV");
@@ -294,7 +294,7 @@ int main(int argc, char** argv) {
 					xNew = limit(xNew, XBOUND_H, XBOUND_L);
 					yNew = limit(yNew, YBOUND_H, YBOUND_L);
 					yawNew = limit(yawNew, M_PI, -M_PI);
-					sendPoint(xNew, yNew, 1.0, yawNew);
+					sendPoint(xNew, yNew, 1.0, 0.0);		//Yaw controller needs to be tuned!!
 				}
 
 				//Check exit conditions

@@ -26,7 +26,13 @@ struct PUB_DATA * AscTec_Controller::runAsctec(struct PUB_DATA * pub, struct GOA
 
 	/* ---- Update Current Goal ---- */
 	if(pub->running) {
-		updateGoal(goal_in);
+		if(pub->xyFree) {
+			goal_in->isNew = true;
+			updateGoalZY(goal_in);
+			goal_in->isNew = false;
+		}else{
+			updateGoal(goal_in);
+		}
 	}else {
 		freeGoal();
 	}
@@ -44,7 +50,6 @@ struct PUB_DATA * AscTec_Controller::runAsctec(struct PUB_DATA * pub, struct GOA
 		pub->TRPYcmd.cmd[3] = true;
 		pub->TRPYcmd.thrust = 0;
 	}
-
 	return pub;
 }
 
@@ -164,6 +169,30 @@ void AscTec_Controller::updateGoal(struct GOAL_DATA * g_ptr)
 
 		st.g_ax = g_ptr->goal.ax;
 		st.g_ay = g_ptr->goal.ay;
+		st.g_az = g_ptr->goal.az;
+		st.g_ayaw = g_ptr->goal.ayaw;
+
+		st.g_range = g_ptr->goal.goal_limit;
+		st.g_id = g_ptr->goal.goal_id;
+		st.wait_time = g_ptr->goal.wait_time;
+	}
+}
+
+void AscTec_Controller::updateGoalZY(struct GOAL_DATA * g_ptr)
+{
+	if(g_ptr->isNew) {
+		st.g_x = st.x;
+		st.g_y = st.y;
+		st.g_z = g_ptr->goal.z;
+		st.g_yaw = g_ptr->goal.yaw;
+
+		st.g_vx = 0.0;
+		st.g_vy = 0.0;
+		st.g_vz = g_ptr->goal.vz;
+		st.g_vyaw = g_ptr->goal.vyaw;
+
+		st.g_ax = 0.0;
+		st.g_ay = 0.0;
 		st.g_az = g_ptr->goal.az;
 		st.g_ayaw = g_ptr->goal.ayaw;
 

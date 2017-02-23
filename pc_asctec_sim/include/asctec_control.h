@@ -4,9 +4,11 @@
 #include <ros/ros.h>
 
 #include <std_msgs/Bool.h>
-#include <geometry_msgs/Vector3.h>
 #include <sensor_msgs/Joy.h>
 #include <visualization_msgs/Marker.h>
+
+#include <geometry_msgs/Vector3.h>
+#include <geometry_msgs/Twist.h>
 
 #include <pc_asctec_sim/SICmd.h>
 #include <pc_asctec_sim/pc_goal_cmd.h>
@@ -37,6 +39,7 @@ using namespace std;
 #define Gr 9.81
 
 #define BOUNDED_ANGLE 24.0 // RP angle divided by this number - Started at 24
+#define XY_LIMIT 8.0
 
 #define THRUST_MAX 100.0
 #define THRUST_MIN 0.0
@@ -74,6 +77,7 @@ typedef struct PUB_DATA
 
 	struct K_DATA k_val;
 	bool running;
+	bool xyFree;
 	float battery;
 
 }pub_data;
@@ -133,20 +137,21 @@ class AscTec_Controller
 		~AscTec_Controller();
 		struct PUB_DATA * runAsctec(struct PUB_DATA * pub, struct GOAL_DATA * goal_in, tf::StampedTransform * transform);
 		void setParams(struct K_DATA * k_ptr);
+		void updateGoal(struct GOAL_DATA * g_ptr);
+		void updateGoalZY(struct GOAL_DATA * g_ptr);
+		float limitOutput(float input, float ceiling, float floor);
 
 		string q_frame, w_frame;
 
 	private:
 		void updatePosition(tf::StampedTransform * transform);
 		void freeGoal();
-		void updateGoal(struct GOAL_DATA * g_ptr);
 		void updateController();
 		pc_asctec_sim::SICmd * setCmd(pc_asctec_sim::SICmd * TRPY);
 		pc_asctec_sim::pc_state * fillState(pc_asctec_sim::pc_state * out_ptr);
 		void initAsctec();
 		void checkBattery();
 		pc_asctec_sim::pc_feedback * checkGoal(pc_asctec_sim::pc_feedback * on_goal);
-		float limitOutput(float input, float ceiling, float floor);
 
 		float battery;
 		CTL_DATA c;
