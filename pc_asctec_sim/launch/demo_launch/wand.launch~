@@ -4,9 +4,9 @@
   <arg name="q_name" value="hummingbird_2" />
   <arg name="q_frame" value="/vicon/hummingbird_2/hummingbird_2" />
   <arg name="w_frame" value="/odom" />
-  <arg name="obs_frame" value="/vicon/tiki/tiki" />
+  <arg name="ugv_frame" value="/vicon/jackal1/jackal1" />
   <arg name="tuning_file" value="default_h.yaml" />  
-  <arg name="rviz_file" value="avoid" />
+  <arg name="rviz_file" value="xy" />
 
 
   <include file="$(find vicon_bridge)/launch/vicon.launch" />
@@ -35,25 +35,14 @@
      <param name="w_frame" value="$(arg w_frame)"/>
   </node>
 
-  <!-- Avoider -->
-  <node name="avoider" 
+  <!-- Roll Pitch listener -->
+  <node name="wand_listener" 
         pkg="pc_asctec_sim" 
-        type="avoid_node" 
+        type="wand_node" 
         output="screen">
 
      <param name="q_name" value="$(arg q_name)"/>
      <param name="w_frame" value="$(arg w_frame)"/>
-     <param name="obs_frame" value="$(arg obs_frame)"/>
   </node>
-
-  <!-- dummy Tf -->
-  <!-- node name="tf_dummy"
-	pkg="pc_asctec_sim"
-	type="tf_tester"
-	output="screen">
-
-	<param name="q_frame" value="$(arg q_frame)"/>
-	<param name="t_frame" value="/vicon/tiki/tiki"/>
-  </node -->
 
 </launch>

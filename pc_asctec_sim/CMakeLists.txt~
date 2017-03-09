@@ -202,9 +202,6 @@ target_link_libraries(avoid_node
 target_link_libraries(xy_node
   ${catkin_LIBRARIES}
 )
-target_link_libraries(wand_node
-  ${catkin_LIBRARIES}
-)
 
 #############
 ## Install ##

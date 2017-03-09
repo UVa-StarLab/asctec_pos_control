@@ -47,13 +47,13 @@
   </node>
 
   <!-- dummy Tf -->
-  <!-- node name="tf_dummy"
+  <node name="tf_dummy"
 	pkg="pc_asctec_sim"
 	type="tf_tester"
 	output="screen">
 
 	<param name="q_frame" value="$(arg q_frame)"/>
 	<param name="t_frame" value="/vicon/tiki/tiki"/>
-  </node -->
+  </node>
 
 </launch>

@@ -211,6 +211,9 @@ int main(int argc, char** argv) {
 		//Handle callbacks
 		ros::spinOnce();
 
+		//Wait for new transform data and grab new transform data
+		//listener.lookupTransform(asc.wframe_, asc.qframe_, ros::Time(0), qtransform);
+
 		//Run quad with feedback data and updated commands
 		feedback = asc.runQuad(&cmd);
 

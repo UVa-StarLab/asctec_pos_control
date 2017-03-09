@@ -24,6 +24,7 @@ typedef struct QUAD_CMD
 {
 	bool start, stopTimer, newPath, xyFree;
 	float battery;
+	tf::TransformListener * listener;
 
 	path_type type;
 	pc_asctec_sim::pc_traj_cmd f_path;

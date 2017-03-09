@@ -3,20 +3,18 @@
 #include <std_msgs/Empty.h>
 #include <std_msgs/Bool.h>
 
-#include <tf/transform_listener.h>
-#include <tf/transform_datatypes.h>
-
 #include <pc_asctec_sim/pc_traj_cmd.h>
 #include <pc_asctec_sim/pc_goal_cmd.h>
 #include <pc_asctec_sim/pc_state.h>
-#include <sensor_msgs/Joy.h>
 
+#include <sensor_msgs/Joy.h>
 #include <visualization_msgs/Marker.h>
+#include <geometry_msgs/Twist.h>
 
 #include <math.h>
 #include <string.h>
 
-#define freq 5
+#define freq 10
 #define maxV 0.2
 #define XBOUND_H 1.0
 #define XBOUND_L -1.0
@@ -25,20 +23,24 @@
 #define BORDER_NUMB 5
 #define BORDER_TOP 1.0
 
+#define k_ang 1.0
+
 using namespace std;
 
 int state = 0;
 string count = "a";
-bool tracking = false;
+bool freeXY = false;
 bool flying = false;
+bool reCenter = false;
 bool isDone = true;
 
 float robot_x, robot_y, robot_yaw;
 string world, ugv, quad_name, quad_frame;
 pc_asctec_sim::pc_state quad_state;
+geometry_msgs::Twist xyCmd;
 
-ros::Publisher traj_pub, border_pub, pos_pub, start_pub;
-ros::Subscriber traj_sub, joy_sub, state_sub;
+ros::Publisher traj_pub, border_pub, pos_pub, start_pub, mode_pub, xy_pub;
+ros::Subscriber traj_sub, joy_sub, state_sub, xy_sub;
 
 void stateCallback(const pc_asctec_sim::pc_state::ConstPtr& msg)
 {
@@ -50,19 +52,35 @@ void trajCallback(const std_msgs::Bool::ConstPtr& msg)
 	isDone = msg->data;
 }
 
+void xyCallback(const geometry_msgs::Twist::ConstPtr& msg)
+{
+	xyCmd = *msg;
+}
+
 void joyCallback(const sensor_msgs::Joy::ConstPtr& msg)
 {
-	if(msg->buttons[2] && flying) {
-		tracking = !tracking;
-		ROS_INFO("Switch Tracking state!");
+	if(isDone) {
+		if(msg->buttons[2] && flying) {
+			freeXY = !freeXY;
 
-	}else if(msg->buttons[3] && state == 0) {
-		flying = true;
-		ROS_INFO("Started!!");
+		}else if(msg->buttons[3] && state == 0) {
+			flying = true;
 
-	}else if(msg->buttons[3] && state == 2) {
-		flying = false;
+		}else if(msg->buttons[3] && state == 2) {
+			flying = false;
 		
+		}else if(msg->buttons[1] && state == 2) {
+			reCenter = true;
+		}
+
+		if(freeXY && msg->buttons[4]) {
+			xyCmd.angular.x = k_ang * M_PI/2 * msg->axes[2];
+			xyCmd.angular.y = k_ang * M_PI/2 * msg->axes[3];
+
+		}else if(freeXY && !msg->buttons[4]) {
+			xyCmd.angular.x = 0;
+			xyCmd.angular.y = 0;
+		}
 	}
 }
 
@@ -187,16 +205,6 @@ void sendTrajectory(float time, float wait, float x, float y, float z, float yaw
 	traj_pub.publish(cmd);
 }
 
-void sendPoint(float x, float y, float z, float yaw)
-{
-	pc_asctec_sim::pc_goal_cmd next;
-	next.x = x;
-	next.y = y;
-	next.z = z;
-	next.yaw = yaw;
-	pos_pub.publish(next);
-}
-
 void sendLandTrajectory(float time) 
 {
 	pc_asctec_sim::pc_traj_cmd cmd;
@@ -245,15 +253,13 @@ int main(int argc, char** argv) {
 	ros::init(argc, argv, "UGV Tracker");
 	ros::NodeHandle nh;
 	ros::Rate loop_rate = freq;
-   
-	tf::StampedTransform transform;
-	tf::TransformListener listener;
 
-	ros::param::get("~w_frame", world);
-	ros::param::get("~ugv_frame", ugv);
 	ros::param::get("~q_name", quad_name);
+	ros::param::get("~w_frame", world);
 
 	start_pub = nh.advertise<std_msgs::Bool>(quad_name + "/start", 10);
+	mode_pub = nh.advertise<std_msgs::Bool>(quad_name + "/cmd_mode", 10);
+	xy_pub = nh.advertise<geometry_msgs::Twist>(quad_name + "/xy_cmds", 10);
 	traj_pub = nh.advertise<pc_asctec_sim::pc_traj_cmd>(quad_name + "/traj_points", 10);
 	pos_pub = nh.advertise<pc_asctec_sim::pc_goal_cmd>(quad_name + "/pos_goals", 10);
 	border_pub = nh.advertise<visualization_msgs::Marker>(quad_name + "/border", 10);
@@ -261,18 +267,12 @@ int main(int argc, char** argv) {
 	traj_sub = nh.subscribe(quad_name + "/traj_end", 10, trajCallback);
 	joy_sub = nh.subscribe("/joy", 10, joyCallback);
 	state_sub = nh.subscribe(quad_name + "/state", 10, stateCallback);
+	xy_sub = nh.subscribe(quad_name + "/mbp_accel", 10, xyCallback);
 
-	listener.waitForTransform(world, ugv, ros::Time(0), ros::Duration(3.0));
-
-	ROS_INFO("Running: UGV Tracker");
+	ROS_INFO("Running: XY Listener");
 
 	while(ros::ok()) {
 		ros::spinOnce();
-		listener.lookupTransform(world, ugv, ros::Time(0), transform);
-		robot_x = transform.getOrigin().x();
-		robot_y = transform.getOrigin().y();
-		robot_yaw = tf::getYaw(transform.getRotation());
-
 		showBorder(outBorder(), BORDER_TOP);
 
 		switch(state) {
@@ -282,6 +282,7 @@ int main(int argc, char** argv) {
 					std_msgs::Bool start;
 					start.data = true;
 					start_pub.publish(start);
+					ROS_INFO("Started!!");
 					state = 1;			
 				}
 				break;
@@ -310,42 +311,43 @@ int main(int argc, char** argv) {
 					ROS_INFO("Landing at 0.0, 0.0, 0.0, time of travel: %f", tTravel);
 					state = 0;
 
-				}else if(tracking && isDone) {
-					float xNew = robot_x;
-					float yNew = robot_y;
-					float yawNew = robot_yaw;
-					xNew = limit(xNew, XBOUND_H, XBOUND_L);
-					yNew = limit(yNew, YBOUND_H, YBOUND_L);
-					yawNew = limit(yawNew, M_PI, -M_PI);
-
-					float tTravel = sqrt(pow((xNew - quad_state.x),2) + pow((yNew - quad_state.y),2)) / maxV;
-	
+				}else if(isDone && reCenter) {
+					float tTravel = sqrt(pow(quad_state.x,2) + pow(quad_state.y,2) + pow(quad_state.z-1,2)) / maxV;
 					tTravel = limit(tTravel, 10, 1);
-					sendTrajectory(tTravel, 0.0, xNew, yNew, 1.0, 0.0);		//Yaw controller needs to be tuned!!
+					sendTrajectory(tTravel,0.0,0.0,0.0,1.0,0.0);
 					isDone = false;
+					reCenter = false;
 
-					ROS_INFO("Begin tracking of UGV");
+					ROS_INFO("Recentering at 0.0, 0.0, 0.0, time of travel: %f", tTravel);
+
+				}else if(isDone && freeXY) {
+					std_msgs::Bool free;
+					free.data = true;
+					mode_pub.publish(free);
+					ROS_INFO("Released control of XY axes");
 					state = 3;
 				}
 				break;
 
 			case 3:
-				if(isDone) {
-					float xNew = robot_x;
-					float yNew = robot_y;
-					float yawNew = robot_yaw;
-					xNew = limit(xNew, XBOUND_H, XBOUND_L);
-					yNew = limit(yNew, YBOUND_H, YBOUND_L);
-					yawNew = limit(yawNew, M_PI, -M_PI);
-					sendPoint(xNew, yNew, 1.0, 0.0);		//Yaw controller needs to be tuned!!
-				}
+				//State behavior
+				xy_pub.publish(xyCmd);
 
 				//Check exit conditions
-				if(!tracking) {
-					ROS_INFO("Halting tracking of UGV");		
+				if(outBorder() || !freeXY) {
+					std_msgs::Bool free;
+					free.data = false;
+					mode_pub.publish(free);
+
+					if(freeXY) {
+						freeXY = false;
+						ROS_INFO("Border breached!");
+					}else {
+						ROS_INFO("Regaining control of XY axes");
+					}
 					state = 2;
 				}
-				break;		
+				break;	
 		}
 		loop_rate.sleep();
 	}

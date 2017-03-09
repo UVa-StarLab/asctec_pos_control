@@ -215,8 +215,9 @@ pc_asctec_sim::CMatrix * Trajectory_Accel::getPathConstants(struct NEW_PATH *pat
 
 	B2(6,0) = path->state.y;
 	B2(8,0) = path->state.vy;
+	cout << B2(8,0) << endl;
 	B2(10,0) = path->state.ay;
-
+	cout << B2(10,0) << endl;
 	B2(12,0) = path->state.z;
 	B2(14,0) = path->state.vz;
 	B2(16,0) = path->state.az;

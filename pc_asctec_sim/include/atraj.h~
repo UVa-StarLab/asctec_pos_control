@@ -99,7 +99,7 @@ class Trajectory_Accel
 		struct WAYPOINT * updateWaypoint(struct WAYPOINT * goal);
 		struct TRPY_CONSTANTS * getXMatrix(struct TRPY_CONSTANTS * matrix);
 		enum set_result setBMatrix(struct NEW_PATH * path);
-		pc_asctec_sim::CMatrix * getPathConstants(struct NEW_PATH * path, pc_asctec_sim::CMatrix * data);
+		void getPathConstants(struct NEW_PATH * path, pc_asctec_sim::CMatrix * data);
 
 	private:
 		void initMembers();

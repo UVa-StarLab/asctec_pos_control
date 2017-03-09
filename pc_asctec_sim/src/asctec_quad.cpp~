@@ -22,7 +22,7 @@ QUAD_OUT * AscTec_Quad::runQuad(QUAD_CMD * cmd)
 
 	//Grab new transform data
 	tf::StampedTransform transform;
-	listener_->lookupTransform(wframe_, qframe_, ros::Time(0), transform);
+	cmd->listener->lookupTransform(wframe_, qframe_, ros::Time(0), transform);
 
 	//Run controller
 	P_ptr = controller.runAsctec(P_ptr,&goal_,&transform);

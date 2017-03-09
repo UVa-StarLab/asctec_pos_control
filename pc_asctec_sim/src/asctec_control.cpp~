@@ -60,7 +60,7 @@ void AscTec_Controller::setParams(struct K_DATA * k_ptr)
 
 pc_asctec_sim::pc_goal_cmd * AscTec_Controller::getGoal(void)
 {
-	pc_asctec_sim::pc_goal_cmd *ptr = new pc_asctec_sim::pc_goal_cmd;
+	pc_asctec_sim::pc_goal_cmd ptr = new pc_asctec_sim::pc_goal_cmd;
 	ptr->x = st.g_x;
 	ptr->y = st.g_y;
 	ptr->z = st.g_z;

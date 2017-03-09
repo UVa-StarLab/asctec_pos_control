@@ -273,7 +273,7 @@ int main(int argc, char** argv) {
 		robot_y = transform.getOrigin().y();
 		robot_yaw = tf::getYaw(transform.getRotation());
 
-		showBorder(outBorder(), BORDER_TOP);
+		showBorder(outBorder());
 
 		switch(state) {
 			case 0:

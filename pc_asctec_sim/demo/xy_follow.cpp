@@ -250,7 +250,7 @@ bool outBorder(void)
 
 int main(int argc, char** argv) {
 
-	ros::init(argc, argv, "UGV Tracker");
+	ros::init(argc, argv, "Joy Tracker");
 	ros::NodeHandle nh;
 	ros::Rate loop_rate = freq;
 

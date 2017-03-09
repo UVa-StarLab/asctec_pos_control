@@ -15,7 +15,7 @@ int main(int argc, char** argv){
 	static tf::TransformBroadcaster br;
 	tf::Transform transform, tiki;
 	transform.setOrigin(tf::Vector3(0.0, -2.0, 1.0));
-	tiki.setOrigin(tf::Vector3(0, 0.65, 1.4));
+	tiki.setOrigin(tf::Vector3(-0.45, 0.4, 1.4));
 	tf::Quaternion q;
 	q.setRPY(0, 0, 0);
 	transform.setRotation(q);
