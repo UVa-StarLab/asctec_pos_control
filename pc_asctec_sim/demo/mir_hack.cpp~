@@ -17,7 +17,7 @@
 #define maxV 0.2
 #define maxV_T 0.5
 #define minT 1
-#define TRIGGER_RANGE 1.0
+#define TRIGGER_RANGE 0.7
 #define F_HEIGHT 1.25
 #define L_HEIGHT 0.75
 #define REST 0.5

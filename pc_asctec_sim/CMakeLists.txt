@@ -153,6 +153,7 @@ add_executable(joy_follower demo/joy_follow.cpp)
 add_executable(mir_hack demo/mir_hack.cpp)
 add_executable(xy_node demo/xy_follow.cpp)
 add_executable(wand_node demo/wand_follow.cpp)
+add_executable(tuner_node demo/tuner.cpp)
 
 ## Add cmake target dependencies of the executable
 ## same as for the library above
@@ -169,6 +170,7 @@ add_dependencies(mir_hack ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_
 add_dependencies(avoid_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 add_dependencies(xy_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 add_dependencies(wand_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(tuner_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Specify libraries to link a library or executable target against
 target_link_libraries(quad_node
@@ -203,6 +205,9 @@ target_link_libraries(xy_node
   ${catkin_LIBRARIES}
 )
 target_link_libraries(wand_node
+  ${catkin_LIBRARIES}
+)
+target_link_libraries(tuner_node
   ${catkin_LIBRARIES}
 )
 

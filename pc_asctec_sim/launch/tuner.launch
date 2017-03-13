@@ -4,13 +4,9 @@
   <arg name="q_name" value="hummingbird_2" />
   <arg name="q_frame" value="/vicon/hummingbird_2/hummingbird_2" />
   <arg name="w_frame" value="/odom" />
-  <arg name="obs_frame" value="/vicon/tiki/tiki" />
-  <arg name="tuning_file" value="default_h.yaml" />  
-  <arg name="rviz_file" value="avoid" />
-
+  <arg name="tuning_file" value="default_18h.yaml" />  
 
   <include file="$(find vicon_bridge)/launch/vicon.launch" />
-  <node name="rviz" pkg="rviz" type="rviz" args="-d $(find pc_asctec_sim)/rviz/$(arg rviz_file).rviz" />
   <node name="joy_controller" pkg="joy" type="joy_node" output="screen"/>
 
   <!-- Asctec TRPY Controller -->
@@ -35,25 +31,13 @@
      <param name="w_frame" value="$(arg w_frame)"/>
   </node>
 
-  <!-- Avoider -->
-  <node name="avoider" 
+  <!-- Param Tuner -->
+  <node name="tuner" 
         pkg="pc_asctec_sim" 
-        type="avoid_node" 
+        type="tuner_node" 
         output="screen">
 
      <param name="q_name" value="$(arg q_name)"/>
-     <param name="w_frame" value="$(arg w_frame)"/>
-     <param name="obs_frame" value="$(arg obs_frame)"/>
   </node>
-
-  <!-- dummy Tf -->
-  <!-- node name="tf_dummy"
-	pkg="pc_asctec_sim"
-	type="tf_tester"
-	output="screen">
-
-	<param name="q_frame" value="$(arg q_frame)"/>
-	<param name="t_frame" value="/vicon/tiki/tiki"/>
-  </node -->
 
 </launch>

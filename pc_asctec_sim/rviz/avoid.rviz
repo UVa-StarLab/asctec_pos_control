@@ -88,8 +88,6 @@ Visualization Manager:
         All Enabled: false
         odom:
           Value: true
-        vicon/hri_wand/hri_wand:
-          Value: true
         vicon/hummingbird_2/hummingbird_2:
           Value: true
         vicon/tiki/tiki:
@@ -101,8 +99,6 @@ Visualization Manager:
       Show Names: true
       Tree:
         odom:
-          vicon/hri_wand/hri_wand:
-            {}
           vicon/hummingbird_2/hummingbird_2:
             {}
           vicon/tiki/tiki:
@@ -183,7 +179,7 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/ThirdPersonFollower
-      Distance: 10
+      Distance: 7.96451
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.06
         Stereo Focal Distance: 1
@@ -195,10 +191,10 @@ Visualization Manager:
         Z: 0
       Name: Current View
       Near Clip Distance: 0.01
-      Pitch: 1.3148
+      Pitch: 1.4648
       Target Frame: <Fixed Frame>
       Value: ThirdPersonFollower (rviz)
-      Yaw: 4.65359
+      Yaw: 4.7186
     Saved: ~
 Window Geometry:
   Displays:

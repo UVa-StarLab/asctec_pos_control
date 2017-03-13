@@ -1,16 +1,16 @@
-kpx:    900.0    
+kpx:    930.0    
 kix:    20.0     
-kvx:    450.0    
-kax:    200.0     
+kvx:    480.0    
+kax:    100.0     
 
-kpy:    900.0    
+kpy:    930.0    
 kiy:    20.0     
-kvy:    450.0    
-kay:    200.0   
+kvy:    480.0    
+kay:    100.0   
 
-kpz:    74.1
-kiz:    25.4
-kvz:    11.4
+kpz:    72.4
+kiz:    24.1
+kvz:    10.2
 kaz:    1.2
 
 kpyaw:  4.0  #12.6

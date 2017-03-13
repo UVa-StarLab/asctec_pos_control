@@ -34,7 +34,6 @@ struct WAYPOINT * Trajectory_Accel::updateWaypoint(struct WAYPOINT * goal)
   */
 
 	if(point == points && !isComplete) {
-		ROS_INFO("Trajectory Completed!");
 		if(!setBufferedPath()) {
 			goal->isValid = false;
 		}
@@ -351,16 +350,11 @@ enum set_result Trajectory_Accel::setBMatrix(struct NEW_PATH * path)
 		c_time = 0.0;
 		isComplete = false;		
 
-
 		if(path->type == overwrite && !isComplete) {
 			ROS_INFO("Last trajectory overwritten!");
 
-		}else if(path->type == newonly || path->type == overwrite) {
-			ROS_INFO("New trajectory set!");
-		
-		}else if(path->type == buffer) {
-			ROS_INFO("Buffer empty, running trajectory!");
 		}
+
 		return success;
 
 	}else if(path->type == newonly && isComplete == false) {

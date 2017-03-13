@@ -137,6 +137,7 @@ class AscTec_Controller
 		~AscTec_Controller();
 		struct PUB_DATA * runAsctec(struct PUB_DATA * pub, struct GOAL_DATA * goal_in, tf::StampedTransform * transform);
 		void setParams(struct K_DATA * k_ptr);
+		pc_asctec_sim::pc_goal_cmd * getGoal(void);
 		void updateGoal(struct GOAL_DATA * g_ptr);
 		void updateGoalZY(struct GOAL_DATA * g_ptr);
 		float limitOutput(float input, float ceiling, float floor);

@@ -22,7 +22,7 @@
 #define obsNumb 10
 
 #define repel_pts 3.0	//always integer
-#define repel 0.6       //radius
+#define repel 0.7       //radius
 #define repel_t 5.0
 #define repel_rings 5
 #define end_off 0.5
@@ -31,7 +31,8 @@
 #define quad_r 0.27     //21 inches diameter
 
 #define freq 10
-#define maxV 0.3
+#define maxV 0.5
+#define maxVZ 0.2
 #define maxA maxV
 
 using namespace std;
@@ -42,10 +43,16 @@ struct obs {
 	float y;
 	float r;
 
-	bool check;
-	double I[2];
-	obs():frame(""), x(0), y(0), r(0), check(false) {}
+	obs():frame(""), x(0), y(0), r(0) {}
 }OBS;
+
+struct Isection {
+
+	double t;
+	int spline;
+	Isection * next;
+	
+}ISECTION;
 
 enum states {
 waitStart,
@@ -124,7 +131,31 @@ float getTravTime(float xst, float x, float yst, float y, float zst, float z)
 	return limit(tTravel, 20, 0.1);
 }
 
-void getRoots(struct obs * ob_ptr, pc_asctec_sim::pc_traj_cmd * path)
+float getTravTimeZ(float xst, float x, float yst, float y, float zst, float z)
+{
+	float tTravel = sqrt(pow(xst - x,2) + pow(yst - y,2) + pow(zst - z,2)) / maxVZ;
+	return limit(tTravel, 20, 0.1);
+}
+/*
+struct Isection * getLastNode(struct Isection * node)
+{
+	if(node->next) {
+		return getLastNode(node->next);
+	}else {
+		return node;
+	}
+}
+
+void addNewINode(double t, int spline)
+{
+	struct Isection * next = new Isection;
+	next->t = t;
+	next->spline = spline;
+
+	getLastNode()->next = next;
+}
+
+void getRoots(pc_asctec_sim::pc_traj_cmd * path, pc_asctec_sim::pc_state * q_st)
 {
 	NEW_PATH temp;
 	temp.state = q_st;
@@ -137,6 +168,7 @@ void getRoots(struct obs * ob_ptr, pc_asctec_sim::pc_traj_cmd * path)
 		companion(i+1,i) = 1;
 	}
 
+	int sp = 0;
 	for(int i=0; i<points; i++) {
 		double A10 = -(pow(C.c5x[i],2) + pow(C.c5y[i],2));
 
@@ -152,32 +184,39 @@ void getRoots(struct obs * ob_ptr, pc_asctec_sim::pc_traj_cmd * path)
 		companion(9,9) = (2*C.c4x[i]*C.c5x[i] + 2*C.c4y[i]*C.c5y[i])/A10;
 
 		Eigen::EigenSolver<Eigen::MatrixXd> result(companion);
-		ob_ptr->check = false;
 		
 		int j = 0;
 		for(int k=0; k<10; k++) {
 			complex<double> lambda = result.eigenvalues()[k];
 			if(lambda.imag() == 0) {
-				ob_ptr->I[j] = lambda.real();
+				ob_ptr->I[j][sp] = lambda.real();
 				j++;
+				ob_ptr->spline[sp] = i;
 				ob_ptr->check = true;
 			}
 		}
+		sp++;
 	}
 }
 
 double getObsAngle(struct obs * ob_ptr)
 {
 	//TODO
-	double angle = 0;
+	float Ix1 = C.c0x[0
+	float Ix2
+	float Iy1
+	float Iy2
+
+	double a = sqrt(pow(Ix1 - Ix2,2) + pow(Iy1 - Iy2,2));
+	double angle = acos((2*(pow(ob_ptr->r,2)) - pow(a,2))/(2*(pow(ob_ptr->r,2)));
 	return angle;
 }
 
 pc_asctec_sim::pc_traj_cmd * injectObsPoints(struct obs * ob_ptr, pc_asctec_sim::pc_traj_cmd * path)
 {
 	//TODO
-	double maxAng = getObsAngle(ob_ptr);
 	getRoots(ob_ptr, path);
+	double maxAng = getObsAngle(ob_ptr);
 }
 
 pc_asctec_sim::pc_traj_cmd * adaptTrajectory(pc_asctec_sim::pc_traj_cmd * path)
@@ -201,7 +240,7 @@ void updateObstacles(struct obs * obs_ptr, tf::TransformListener * listener)
 		}
 	}
 }
-
+*/
 void sendAvoidABNew(float wait, float x, float y, float z, float yaw, tf::StampedTransform * transform)
 {
 	/* Aversion trajectory from -y to +y
@@ -420,6 +459,21 @@ void sendTrajectory(float wait, float x, float y, float z, float yaw)
 	traj_pub.publish(cmd);
 }
 
+void sendRiseTrajectory() 
+{
+	pc_asctec_sim::pc_traj_cmd cmd;
+	cmd.x[0] = 0;
+	cmd.y[0] = 0;
+	cmd.z[0] = 1;
+	cmd.yaw[0] = 0;
+	cmd.wait_time[0] = 0;
+	cmd.duration[0] = getTravTimeZ(q_st.x, 0, q_st.y, 0, q_st.z, 1);
+	cmd.points = 1;
+
+	isDone = false;
+	traj_pub.publish(cmd);
+}
+
 void sendLandTrajectory() 
 {
 	pc_asctec_sim::pc_traj_cmd cmd;
@@ -606,9 +660,7 @@ int main(int argc, char** argv) {
 		listener.lookupTransform(world, obs_frame, ros::Time(0), transform);
 		showRange(transform.getOrigin().x(), transform.getOrigin().y(), transform.getOrigin().z());
 		showRealRadius(transform.getOrigin().x(), transform.getOrigin().y(), transform.getOrigin().z());
-		showQuadRadius(q_st.x, q_st.y, q_st.z);
-
-		updateObstacles(obs_ptr, &listener);		
+		showQuadRadius(q_st.x, q_st.y, q_st.z);	
 
 		obs_ptr->x = transform.getOrigin().x();
 		obs_ptr->y = transform.getOrigin().y();
@@ -625,7 +677,7 @@ int main(int argc, char** argv) {
 						start.data = true;
 						start_pub.publish(start);
 
-						sendTrajectory(0,0,0,1,0);
+						sendRiseTrajectory();
 					}else {
 						ROS_INFO("Remove obstacle from center first!");
 						isFlying = false;

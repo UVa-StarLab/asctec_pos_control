@@ -34,7 +34,6 @@ struct WAYPOINT * Trajectory_Accel::updateWaypoint(struct WAYPOINT * goal)
   */
 
 	if(point == points && !isComplete) {
-		ROS_INFO("Trajectory Completed!");
 		if(!setBufferedPath()) {
 			goal->isValid = false;
 		}
@@ -215,9 +214,8 @@ pc_asctec_sim::CMatrix * Trajectory_Accel::getPathConstants(struct NEW_PATH *pat
 
 	B2(6,0) = path->state.y;
 	B2(8,0) = path->state.vy;
-	cout << B2(8,0) << endl;
 	B2(10,0) = path->state.ay;
-	cout << B2(10,0) << endl;
+
 	B2(12,0) = path->state.z;
 	B2(14,0) = path->state.vz;
 	B2(16,0) = path->state.az;
@@ -356,12 +354,8 @@ enum set_result Trajectory_Accel::setBMatrix(struct NEW_PATH * path)
 		if(path->type == overwrite && !isComplete) {
 			ROS_INFO("Last trajectory overwritten!");
 
-		}else if(path->type == newonly || path->type == overwrite) {
-			ROS_INFO("New trajectory set!");
-		
-		}else if(path->type == buffer) {
-			ROS_INFO("Buffer empty, running trajectory!");
 		}
+
 		return success;
 
 	}else if(path->type == newonly && isComplete == false) {

@@ -38,7 +38,7 @@ using namespace std;
 #define G_TH 25.0
 #define Gr 9.81
 
-#define BOUNDED_ANGLE 24.0 // RP angle divided by this number - Started at 24
+#define BOUNDED_ANGLE 18.0 // RP angle divided by this number - Started at 24
 #define XY_LIMIT 8.0
 
 #define THRUST_MAX 100.0
