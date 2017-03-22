@@ -35,8 +35,8 @@
 #define XBIAS  -0.15
 #define YBIAS  0.0
 
-#define k_ang 0.9
-#define ANG_LIMIT M_PI/8
+#define k_ang 1.1
+#define ANG_LIMIT M_PI/4
 
 using namespace std;
 

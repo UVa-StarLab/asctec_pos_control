@@ -27,7 +27,7 @@
 
 using namespace std;
 
-#define CONTROL_RATE 50.0
+#define CONTROL_RATE 40.0
 #define dT 1/CONTROL_RATE
 
 #define BUFFER 16
@@ -38,8 +38,20 @@ using namespace std;
 #define G_TH 25.0
 #define Gr 9.81
 
-#define BOUNDED_ANGLE 18.0 // RP angle divided by this number - Started at 24
-#define XY_LIMIT 8.0
+#define BOUNDED_ANGLE 24.0 // RP angle divided by this number - Started at 24
+#define XY_LIMIT M_PI/8
+
+#define RBIAS -0.0006
+#define PBIAS 0.0583
+
+//#define RBIAS -0.0005 //High
+//#define PBIAS 0.06
+
+//#define RBIAS -0.0006 //Mid
+//#define PBIAS 0.057
+
+//#define RBIAS -0.0005 //Low
+//#define PBIAS 0.06
 
 #define THRUST_MAX 100.0
 #define THRUST_MIN 0.0
@@ -77,8 +89,9 @@ typedef struct PUB_DATA
 
 	struct K_DATA k_val;
 	bool running;
-	bool xyFree;
+	int xyFree;
 	float battery;
+	float vx, vy;
 
 }pub_data;
 
@@ -140,6 +153,8 @@ class AscTec_Controller
 		pc_asctec_sim::pc_goal_cmd * getGoal(void);
 		void updateGoal(struct GOAL_DATA * g_ptr);
 		void updateGoalZY(struct GOAL_DATA * g_ptr);
+		void updateGoalXZY(struct GOAL_DATA * g_ptr);
+
 		float limitOutput(float input, float ceiling, float floor);
 
 		string q_frame, w_frame;

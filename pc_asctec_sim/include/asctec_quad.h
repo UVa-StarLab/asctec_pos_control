@@ -22,8 +22,10 @@ typedef struct QUAD_OUT
 
 typedef struct QUAD_CMD
 {
-	bool start, stopTimer, newPath, xyFree;
+	int xyFree;
+	bool start, stopTimer, newPath;
 	float battery;
+	float x,y,vx,vy;
 
 	path_type type;
 	pc_asctec_sim::pc_traj_cmd f_path;

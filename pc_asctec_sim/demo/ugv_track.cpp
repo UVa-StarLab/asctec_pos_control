@@ -28,7 +28,6 @@
 using namespace std;
 
 int state = 0;
-string count = "a";
 bool tracking = false;
 bool flying = false;
 bool isDone = true;

@@ -81,6 +81,7 @@ bool AscTec_Quad::setQuadGoal(struct GOAL_DATA * g)
 {
 	if(accTraj.getComplete() && (P_ptr->xyFree == 0 || P_ptr->xyFree == 2)) {
 		if(g->isNew) {
+			cout << "Goal Updated!" << endl;
 			controller.updateGoal(g);
 			Q_ptr->goal.x = g->goal.x;
 			Q_ptr->goal.y = g->goal.y;

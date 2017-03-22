@@ -14,7 +14,7 @@
 #include <math.h>
 #include <string.h>
 
-#define freq 15
+#define freq 10
 #define maxV 0.2
 #define XBOUND_H 1.0
 #define XBOUND_L -1.0

@@ -31,7 +31,7 @@
 #define quad_r 0.27     //21 inches diameter
 
 #define freq 10
-#define maxV 0.5
+#define maxV 0.25
 #define maxVZ 0.2
 #define maxA maxV
 
@@ -128,7 +128,7 @@ float limit(float value, float upper, float lower)
 float getTravTime(float xst, float x, float yst, float y, float zst, float z)
 {
 	float tTravel = sqrt(pow(xst - x,2) + pow(yst - y,2) + pow(zst - z,2)) / maxV;
-	return limit(tTravel, 20, 0.1);
+	return limit(tTravel, 15, 0.1);
 }
 
 float getTravTimeZ(float xst, float x, float yst, float y, float zst, float z)
@@ -467,7 +467,7 @@ void sendRiseTrajectory()
 	cmd.z[0] = 1;
 	cmd.yaw[0] = 0;
 	cmd.wait_time[0] = 0;
-	cmd.duration[0] = getTravTimeZ(q_st.x, x, q_st.y, y, q_st.z, z);
+	cmd.duration[0] = getTravTimeZ(q_st.x, 0, q_st.y, 0, q_st.z, 1);
 	cmd.points = 1;
 
 	isDone = false;

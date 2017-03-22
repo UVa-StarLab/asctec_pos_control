@@ -220,7 +220,7 @@ int main(int argc, char** argv) {
 	ros::Subscriber xymode_sub = nh.subscribe(q_name + "/xycmd_mode", 1, xymodeCallback);		//Control XY axes mode
 	ros::Subscriber xmode_sub = nh.subscribe(q_name + "/xcmd_mode", 1, xmodeCallback);		//Control XY axes mode
 	ros::Subscriber xy_sub = nh.subscribe(q_name + "/xy_cmds", 5, xyCallback);			//Roll Pitch commands
-	ros::Subscriber estSt_sub = nh.subscribe(q_name + "/est_state", 1, estStCallback);
+	ros::Subscriber estSt_sub = nh.subscribe(q_name + "/est_state", 10, estStCallback);
 
 	/* -------------------- transform listener -------------------- */
 	tf::TransformListener listener;	

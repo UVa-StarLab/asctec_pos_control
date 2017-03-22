@@ -3,8 +3,10 @@
   <arg name="port" value="/dev/ttyUSB0" />
   <arg name="q_name" value="hummingbird_2" />
   <arg name="q_frame" value="/vicon/hummingbird_2/hummingbird_2" />
+  <arg name="box_frame" value="/vicon/box/box" />
   <arg name="w_frame" value="/odom" />
   <arg name="tuning_file" value="default_h.yaml" />  
+
 
   <include file="$(find vicon_bridge)/launch/vicon.launch" />
   <node name="joy_controller" pkg="joy" type="joy_node" output="screen"/>
@@ -22,7 +24,8 @@
   <!-- Asctec Quad Node -->
   <node name="asctec_controller" 
 	pkg="pc_asctec_sim" 
-	type="quad_node">
+	type="quad_node" 
+	output="screen">
 
      <rosparam file="$(find pc_asctec_sim)/cfg/$(arg tuning_file)" command="load"/>
      <param name="q_name" value="$(arg q_name)"/>
@@ -30,13 +33,15 @@
      <param name="w_frame" value="$(arg w_frame)"/>
   </node>
 
-  <!-- Param Tuner -->
-  <node name="tuner" 
+  <!-- Roll Pitch listener -->
+  <node name="esen_experiment" 
         pkg="pc_asctec_sim" 
-        type="tuner_node" 
+        type="esen_exp" 
         output="screen">
 
      <param name="q_name" value="$(arg q_name)"/>
+     <param name="box_frame" value="$(arg box_frame)"/>
+     <param name="w_frame" value="$(arg w_frame)"/>
   </node>
 
 </launch>

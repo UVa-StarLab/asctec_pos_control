@@ -12,8 +12,8 @@
 #include <string.h>
 
 #define freq 10
-#define maxV 0.5
-#define maxVZ 0.3
+#define maxV 0.25
+#define maxVZ 0.2
 
 using namespace std;
 
@@ -124,6 +124,29 @@ void sendNegTestTrajectory()
 	isDone = false;
 }
 
+void sendYawTest(bool pos)
+{
+	pc_asctec_sim::pc_traj_cmd cmd;
+	cmd.x[0] = 0;
+	cmd.y[0] = 0;
+	cmd.z[0] = 1;
+	cmd.duration[0] = 4;
+
+	if(pos) {
+		ROS_INFO("Sending pi/2");
+		cmd.yaw[0] = M_PI/2;
+
+	}else {
+		ROS_INFO("Sending -pi/2);
+		cmd.yaw[0] = -M_PI/2;
+
+	}
+
+	cmd.points = 1;
+	traj_pub.publish(cmd);
+	isDone = false;
+}
+
 void sendLandTrajectory() 
 {
 	float tTravel = sqrt(pow(quad_state.x,2) + pow(quad_state.y,2) + pow((1 - quad_state.z),2)) / maxVZ;
@@ -179,7 +202,7 @@ int main(int argc, char** argv) {
 					std_msgs::Bool start;
 					start.data = true;
 					start_pub.publish(start);
-					sendRiseTrajectory(0,0,1,0,3.0);
+					sendRiseTrajectory(0,0,1,0,1.0);
 					state = 1;
 				}
 				break;
@@ -192,7 +215,7 @@ int main(int argc, char** argv) {
 					state = 0;
 
 				}else if(isDone && isStarted) {
-					sendPosTestTrajectory();
+					sendYawTest(true);
 					state = 2;
 				}
 				break;
@@ -205,7 +228,7 @@ int main(int argc, char** argv) {
 					state = 0;
 
 				}else if(isDone && isStarted) {
-					sendNegTestTrajectory();
+					sendYawTest(false);
 					state = 1;
 				}
 				break;

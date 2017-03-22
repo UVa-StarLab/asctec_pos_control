@@ -22,7 +22,8 @@
   <!-- Asctec Quad Node -->
   <node name="asctec_controller" 
 	pkg="pc_asctec_sim" 
-	type="quad_node">
+	type="quad_node" 
+	output="screen">
 
      <rosparam file="$(find pc_asctec_sim)/cfg/$(arg tuning_file)" command="load"/>
      <param name="q_name" value="$(arg q_name)"/>
@@ -30,10 +31,10 @@
      <param name="w_frame" value="$(arg w_frame)"/>
   </node>
 
-  <!-- Param Tuner -->
-  <node name="tuner" 
+  <!-- Acc tester -->
+  <node name="acc" 
         pkg="pc_asctec_sim" 
-        type="tuner_node" 
+        type="acc_test" 
         output="screen">
 
      <param name="q_name" value="$(arg q_name)"/>

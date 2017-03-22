@@ -88,9 +88,9 @@ Visualization Manager:
         All Enabled: false
         odom:
           Value: true
-        vicon/hummingbird_2/hummingbird_2:
+        vicon/hri_wand/hri_wand:
           Value: true
-        vicon/tiki/tiki:
+        vicon/hummingbird_2/hummingbird_2:
           Value: true
       Marker Scale: 1
       Name: TF
@@ -99,9 +99,9 @@ Visualization Manager:
       Show Names: true
       Tree:
         odom:
-          vicon/hummingbird_2/hummingbird_2:
+          vicon/hri_wand/hri_wand:
             {}
-          vicon/tiki/tiki:
+          vicon/hummingbird_2/hummingbird_2:
             {}
       Update Interval: 0
       Value: true
@@ -136,7 +136,7 @@ Visualization Manager:
       Marker Topic: /hummingbird_2/obstacle
       Name: Marker
       Namespaces:
-        "": true
+        {}
       Queue Size: 100
       Value: true
     - Class: rviz/Marker
@@ -144,7 +144,7 @@ Visualization Manager:
       Marker Topic: /hummingbird_2/quad_size
       Name: Marker
       Namespaces:
-        "": true
+        {}
       Queue Size: 100
       Value: true
     - Class: rviz/Marker
@@ -152,7 +152,7 @@ Visualization Manager:
       Marker Topic: /hummingbird_2/tiki
       Name: Marker
       Namespaces:
-        "": true
+        {}
       Queue Size: 100
       Value: true
   Enabled: true
@@ -191,10 +191,10 @@ Visualization Manager:
         Z: 0
       Name: Current View
       Near Clip Distance: 0.01
-      Pitch: 1.4648
+      Pitch: 0.884801
       Target Frame: <Fixed Frame>
       Value: ThirdPersonFollower (rviz)
-      Yaw: 4.7186
+      Yaw: 4.8486
     Saved: ~
 Window Geometry:
   Displays:

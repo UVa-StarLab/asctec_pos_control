@@ -5,7 +5,7 @@
   <arg name="q_frame" value="/vicon/hummingbird_2/hummingbird_2" />
   <arg name="w_frame" value="/odom" />
   <arg name="obs_frame" value="/vicon/tiki/tiki" />
-  <arg name="tuning_file" value="default_h.yaml" />  
+  <arg name="tuning_file" value="default_18h.yaml" />  
   <arg name="rviz_file" value="avoid" />
 
 
