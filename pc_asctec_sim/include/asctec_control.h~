@@ -41,8 +41,8 @@ using namespace std;
 #define BOUNDED_ANGLE 24.0 // RP angle divided by this number - Started at 24
 #define XY_LIMIT M_PI/8
 
-#define RBIAS -0.0006
-#define PBIAS 0.0585
+#define RBIAS -0.0516
+#define PBIAS -0.0341
 
 //#define RBIAS -0.0005 //High
 //#define PBIAS 0.06

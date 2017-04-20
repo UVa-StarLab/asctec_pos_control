@@ -32,7 +32,7 @@
 
 #define BORDER_NUMB 5
 #define BORDER_TOP 1.0
-#define XBIAS  -0.15
+#define XBIAS  0.0
 #define YBIAS  0.0
 
 #define k_ang 0.9

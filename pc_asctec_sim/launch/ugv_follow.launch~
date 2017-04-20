@@ -1,8 +1,8 @@
 <launch>
 
   <arg name="port" value="/dev/ttyUSB0" />
-  <arg name="q_name" value="hummingbird_1" />
-  <arg name="q_frame" value="/vicon/hummingbird_1/hummingbird_1" />
+  <arg name="q_name" value="hummingbird_2" />
+  <arg name="q_frame" value="/vicon/hummingbird_2/hummingbird_2" />
   <arg name="w_frame" value="/odom" />
   <arg name="ugv_frame" value="/vicon/jackal1/jackal1" />
   <arg name="tuning_file" value="default_h.yaml" />  

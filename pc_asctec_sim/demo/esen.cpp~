@@ -20,7 +20,7 @@
 #define freq 40
 #define maxV 0.2
 #define XBOUND_H 1.1
-#define XBOUND_L -1.7
+#define XBOUND_L -2.0
 #define YBOUND_H 2.4
 #define YBOUND_L -2.0
 #define BORDER_NUMB 5
@@ -30,8 +30,6 @@
 #define YBIAS 0.0  //-0.3
 
 #define k_ang 1.0
-
-#define m 0.2957
 
 using namespace std;
 
@@ -49,7 +47,7 @@ pc_asctec_sim::pc_goal_cmd pos_cmd;
 pc_asctec_sim::pc_state quad_state;
 geometry_msgs::Twist xyCmd;
 
-ros::Publisher traj_pub, border_pub, pos_pub, start_pub, mode_pub, xy_pub, odom_pub, box_pub;
+ros::Publisher traj_pub, border_pub, pos_pub, start_pub, mode_pub, xy_pub, odom_pub, box_pub, debug_pub;
 ros::Subscriber traj_sub, joy_sub, state_sub, xy_sub, esen_sub, desSt_sub;
 
 void stateCallback(const pc_asctec_sim::pc_state::ConstPtr& msg)
@@ -287,6 +285,7 @@ int main(int argc, char** argv) {
 	pos_pub = nh.advertise<pc_asctec_sim::pc_goal_cmd>(quad_name + "/pos_goals", 10);
 	border_pub = nh.advertise<visualization_msgs::Marker>(quad_name + "/border", 10);
 	box_pub = nh.advertise<geometry_msgs::Twist>(quad_name + "/box", 10);
+	debug_pub = nh.advertise<geometry_msgs::Twist>(quad_name + "/debug", 10);
 
 	traj_sub = nh.subscribe(quad_name + "/traj_end", 10, trajCallback);
 	joy_sub = nh.subscribe("/joy", 10, joyCallback);
@@ -324,6 +323,17 @@ int main(int argc, char** argv) {
 
 		quad_state.x = odom.linear.x;
 		quad_state.y = odom.linear.y;
+
+		tf::Quaternion q = transform.getRotation();
+		tf::Matrix3x3 m(q);
+
+		double wYaw, wRoll, wPitch;
+		m.getRPY(wRoll, wPitch, wYaw);
+		geometry_msgs::Twist dbug;
+		dbug.angular.x = wRoll;
+		dbug.angular.y = wPitch;
+		dbug.angular.z = wYaw;
+		debug_pub.publish(dbug);
 
 		switch(state) {
 			case 0:
@@ -369,12 +379,8 @@ int main(int argc, char** argv) {
 					reStart = false;
 
 					ROS_INFO("Recentering at 0.4, -1.5, 0.0, time of travel: %f", tTravel);
-					ROS_INFO("Waiting for Esen cmd");
 
 				}else if(isDone && freeXY) {
-					std_msgs::Bool free;
-					free.data = true;
-					mode_pub.publish(free);
 					ROS_INFO("Listening to Esen commands...");
 					state = 3;
 				}
@@ -382,28 +388,33 @@ int main(int argc, char** argv) {
 
 			case 3:
 				//State behavior
-				pos_cmd.z = 1.0;
-				pos_pub.publish(pos_cmd);
+				if(isDone) {
+					pc_asctec_sim::pc_traj_cmd cmd;
+					cmd.x[0] = boxy.linear.x-1;
+					cmd.x[1] = boxy.linear.x-1;
+					cmd.x[2] = 0.4;
 
-				//Check exit conditions
-				if(outBorder() || !freeXY) {
-					std_msgs::Bool free;
-					free.data = false;
-					mode_pub.publish(free);
+					cmd.y[0] = boxy.linear.y-0.5;
+					cmd.y[1] = boxy.linear.y+0.5;
+					cmd.y[2] = 1.75;
 
-					pos_cmd.x = odom.linear.x;
-					pos_cmd.y = odom.linear.y;
-					pos_cmd.z = 1.0;
-					pos_pub.publish(pos_cmd);
+					cmd.z[0] = 1.0;
+					cmd.z[1] = 1.0;
+					cmd.z[2] = 1.0;
 
-					if(freeXY) {
-						freeXY = false;
-						ROS_INFO("Border broken!");
-					}else {
-						ROS_INFO("Esen trajectory completed!");
-					}
-					state = 2;
+					cmd.duration[0] = sqrt(pow(quad_state.x-cmd.x[0],2)+pow(quad_state.y-cmd.y[0],2))/maxV;
+					cmd.duration[1] = sqrt(pow(cmd.x[0]-cmd.x[1],2)+pow(cmd.y[0]-cmd.y[1],2))/maxV;
+					cmd.duration[2] = sqrt(pow(cmd.x[1]-cmd.x[2],2)+pow(cmd.y[1]-cmd.y[2],2))/maxV;
+
+					cmd.points = 3;
+					traj_pub.publish(cmd);
+					isDone = false;
+					state = 4;
 				}
+				break;
+		
+			case 4:
+					//Stall and do nothing
 				break;	
 		}
 		loop_rate.sleep();

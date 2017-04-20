@@ -310,7 +310,7 @@ int main(int argc, char** argv) {
 				*/
 
 				if(isDone) {
-					if(abs(joy_x) > 0.1 || abs(joy_y) > 0.1 || abs(joy_z) > 0.01 || abs(joy_yaw) > 0.1) {
+					if(abs(joy_x) > 0.1 || abs(joy_y) > 0.1 || abs(joy_yaw) > 0.1) {
 						float xNew = quad_state.x + joy_x;
 						float yNew = quad_state.y + joy_y;
 						float zNew = quad_state.z + joy_z;

@@ -93,6 +93,22 @@ void estStCallback(const geometry_msgs::Twist::ConstPtr& msg)
 	cmd.vy = msg->angular.y;
 }
 
+void clearCallback(const std_msgs::Bool::ConstPtr& msg)
+{
+	if(msg->data) {
+		tTrail.points.clear();
+		qTrail.points.clear();
+
+		geometry_msgs::Point vis_trail;
+		vis_trail.x = feedback->state.x;
+		vis_trail.y = feedback->state.y;
+		vis_trail.z = feedback->state.z;
+
+		tTrail.points.push_back(vis_trail);
+		qTrail.points.push_back(vis_trail);
+	}
+}
+
 /* -------------------- callbacks end -------------------- */
 
 void resetFlags()
@@ -137,11 +153,12 @@ void initTrails(string frame)
 void pubTrails(struct TRAIL * g, pc_asctec_sim::pc_state * st, string wframe_)
 {
 	geometry_msgs::Point vis_trail;
-	
+		
 	//Publish full quad path
 	vis_trail.x = st->x;
 	vis_trail.y = st->y;
 	vis_trail.z = st->z;
+	qTrail.action = visualization_msgs::Marker::ADD;
 	qTrail.points.push_back(vis_trail);
 	qTrail_pub.publish(qTrail);
 	qTrail.points.push_back(vis_trail);
@@ -150,6 +167,7 @@ void pubTrails(struct TRAIL * g, pc_asctec_sim::pc_state * st, string wframe_)
 	vis_trail.x = g->x;
 	vis_trail.y = g->y;
 	vis_trail.z = g->z;
+	tTrail.action = visualization_msgs::Marker::ADD;
 	tTrail.points.push_back(vis_trail);
 	tTrail_pub.publish(tTrail);
 	tTrail.points.push_back(vis_trail);
@@ -221,6 +239,7 @@ int main(int argc, char** argv) {
 	ros::Subscriber xmode_sub = nh.subscribe(q_name + "/xcmd_mode", 1, xmodeCallback);		//Control XY axes mode
 	ros::Subscriber xy_sub = nh.subscribe(q_name + "/xy_cmds", 5, xyCallback);			//Roll Pitch commands
 	ros::Subscriber estSt_sub = nh.subscribe(q_name + "/est_state", 1, estStCallback);
+	ros::Subscriber clear_sub = nh.subscribe(q_name + "/clear_trails", 1, clearCallback);
 
 	/* -------------------- transform listener -------------------- */
 	tf::TransformListener listener;	

@@ -47,7 +47,7 @@ pc_asctec_sim::pc_goal_cmd pos_cmd;
 pc_asctec_sim::pc_state quad_state;
 geometry_msgs::Twist xyCmd;
 
-ros::Publisher traj_pub, border_pub, pos_pub, start_pub, mode_pub, xy_pub, odom_pub, box_pub, debug_pub;
+ros::Publisher traj_pub, border_pub, pos_pub, start_pub, mode_pub, xy_pub, odom_pub, box_pub, debug_pub, clear_pub;
 ros::Subscriber traj_sub, joy_sub, state_sub, xy_sub, esen_sub, desSt_sub;
 
 void stateCallback(const pc_asctec_sim::pc_state::ConstPtr& msg)
@@ -278,6 +278,7 @@ int main(int argc, char** argv) {
 	tf::TransformListener listener;
 
 	start_pub = nh.advertise<std_msgs::Bool>(quad_name + "/start", 10);
+	clear_pub = nh.advertise<std_msgs::Bool>(quad_name + "/clear_trails", 10);
 	mode_pub = nh.advertise<std_msgs::Bool>(quad_name + "/xcmd_mode", 10);
 	xy_pub = nh.advertise<geometry_msgs::Twist>(quad_name + "/xy_cmds", 10);
 	odom_pub = nh.advertise<geometry_msgs::Twist>(quad_name + "/odom", 10);
@@ -298,7 +299,7 @@ int main(int argc, char** argv) {
 	listener.waitForTransform(world, quad_frame, ros::Time(0), ros::Duration(3.0));
 	ros::Time past = ros::Time(0);
 
-	ROS_INFO("Running: Esen_exp");
+	ROS_INFO("Running: Esen_perf");
 
 	while(ros::ok()) {
 		ros::spinOnce();
@@ -382,6 +383,9 @@ int main(int argc, char** argv) {
 
 				}else if(isDone && freeXY) {
 					ROS_INFO("Listening to Esen commands...");
+					std_msgs::Bool clear;
+					clear.data = true;
+					clear_pub.publish(clear);
 					state = 3;
 				}
 				break;

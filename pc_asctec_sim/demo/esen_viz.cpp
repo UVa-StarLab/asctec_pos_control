@@ -1,0 +1,139 @@
+#include <ros/ros.h>
+#include <std_msgs/Bool.h>
+
+#include <pc_asctec_sim/pc_goal_cmd.h>
+
+#include <tf/transform_listener.h>
+#include <tf/transform_datatypes.h>
+
+#include <visualization_msgs/Marker.h>
+#include <geometry_msgs/Point.h>
+#include <geometry_msgs/Twist.h>
+
+#include <math.h>
+#include <string.h>
+
+#define freq 40
+
+using namespace std;
+
+bool esen = false;
+bool recalc = false;
+bool first = true;
+bool newG = false;
+
+float x = 0; 
+float y = 0;
+string world, quad_name, quad_frame;
+visualization_msgs::Marker points, qTrail, est;
+geometry_msgs::Point qp, ep;
+pc_asctec_sim::pc_goal_cmd cmd;
+
+ros::Publisher calc_pub, odom_pub;
+
+void recalcCallback(const std_msgs::Bool::ConstPtr& msg)
+{
+	if(msg->data) {
+		first = true;
+		geometry_msgs::Point p;
+		p.x = x;
+		p.y = y;
+		p.z = 1.0;
+
+		points.action = visualization_msgs::Marker::ADD;
+		points.points.push_back(p);
+		calc_pub.publish(points);
+	};
+}
+
+void esenCallback(const std_msgs::Bool::ConstPtr& msg)
+{
+	esen = msg->data;
+}
+
+void posCallback(const pc_asctec_sim::pc_goal_cmd::ConstPtr& msg)
+{
+	if(esen) {
+		cmd = *msg;
+	}
+}
+
+int main(int argc, char** argv) {
+
+	ros::init(argc, argv, "Esen_Viz");
+	ros::NodeHandle nh;
+	ros::Rate loop_rate = freq;
+
+	tf::StampedTransform transform;
+	tf::TransformListener listener;
+
+	calc_pub = nh.advertise<visualization_msgs::Marker>("/hummingbird_1/calc_points", 10);
+	odom_pub = nh.advertise<visualization_msgs::Marker>("/hummingbird_1/odom_viz", 10);
+
+	ros::Subscriber recalc_sub = nh.subscribe("/hummingbird_1/recalc", 10, recalcCallback);
+	ros::Subscriber esen_sub = nh.subscribe("/hummingbird_1/esen", 10, esenCallback);
+	ros::Subscriber wp_sub = nh.subscribe("/hummingbird_1/way_point", 10, wpCallback);
+	ros::Subscriber pos_sub = nh.subscribe("/hummingbird_1/pos_goals", 10, posCallback);
+
+	listener.waitForTransform("/odom", "/vicon/hummingbird_1/hummingbird_1", ros::Time(0), ros::Duration(3.0));
+
+	points.header.frame_id = "/odom";
+	points.header.stamp = ros::Time::now();
+	points.ns = "Calc points";
+	points.action = visualization_msgs::Marker::ADD;
+	points.pose.orientation.w = 1.0;
+	points.id = 0;
+	points.type = visualization_msgs::Marker::SPHERE_LIST;
+
+	points.scale.x = 0.1;
+	points.scale.y = 0.1;
+	points.color.a = 1.0;
+	points.color.r = 1.0;
+	points.color.g = 0.5;
+
+	qTrail.header.frame_id = "/odom;
+	qTrail.header.stamp = ros::Time::now();
+	qTrail.id = 0;
+	qTrail.action = visualization_msgs::Marker::ADD;
+	qTrail.type = visualization_msgs::Marker::LINE_LIST;
+	qTrail.color.a = 1.0;				
+	qTrail.color.b = 1.0;
+	qTrail.color.g = 0.7;
+	qTrail.scale.x = 0.05;
+	qTrail.scale.y = 0.05;
+
+	est.header.frame_id = "/odom";
+	est.header.stamp = ros::Time::now();
+	est.id = 0;
+	est.action = visualization_msgs::Marker::ADD;
+	est.type = visualization_msgs::Marker::LINE_LIST;
+	est.color.a = 1.0;				
+	est.color.b = 1.0;
+	est.color.g = 0.3;
+
+	est.scale.x = 0.05;
+	est.scale.y = 0.05;
+
+	ep.z = 1.0;
+	qp.z = 1.0;
+
+	listener.waitForTransform("/odom", "/vicon/tiki/tiki", ros::Time(0), ros::Duration(3.0));
+
+	ROS_INFO("Running: Esen_viz");
+
+	while(ros::ok()) {
+		if(esen) {	
+					
+		}
+		listener.lookupTransform("/odom", "/vicon/tiki/tiki", ros::Time(0), transform);
+		listener.lookupTransform("/odom", "/vicon/hummingbird_1/hummingbird_1", ros::Time(0), transform);
+		x = transform.getOrigin().x();
+		y = transform.getOrigin().y();
+		qp.x = x;
+		qp.y = y;
+
+		ros::spinOnce();
+		loop_rate.sleep();
+	}
+}
+
