@@ -7,7 +7,7 @@
 /* --------------- Data Structure Definitions ------------ */
 typedef struct TRAIL
 {
-	float x,y,z;
+	float x,y,z, yaw;
 }trail;
 
 typedef struct QUAD_OUT

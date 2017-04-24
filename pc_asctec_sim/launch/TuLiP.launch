@@ -4,23 +4,26 @@
   <arg name="q_name" value="hummingbird_2" />
   <arg name="q_frame" value="/vicon/hummingbird_2/hummingbird_2" />
   <arg name="w_frame" value="/odom" />
+  <arg name="ugv_frame" value="/vicon/jackal1/jackal1" />
   <arg name="tuning_file" value="default_h.yaml" />  
+  <arg name="rviz_file" value="LTL" />
 
   <include file="$(find vicon_bridge)/launch/vicon.launch" />
   <node name="joy_controller" pkg="joy" type="joy_node" output="screen"/>
+  <node name="rviz" pkg="rviz" type="rviz" args="-d $(find pc_asctec_sim)/rviz/$(arg rviz_file).rviz" />
 
   <!-- Asctec TRPY Controller -->
-  <node pkg="asctec_ll_updated" name="$(arg q_name)" type="asctec_ll_updated_node" output="screen">
+  <!-- node pkg="asctec_ll_updated" name="$(arg q_name)" type="asctec_ll_updated_node" output="screen">
      <param name="port" value="$(arg port)"/>
      <param name="ll_status_rate" value="1"/>
      <param name="imu_calc_data_rate" value="0"/>
      <param name="rc_data_rate" value="0"/>
      <param name="ctrl_out_rate" value="10"/>
      <param name="gps_data_advanced_rate" value="0"/>
-  </node>
+  </node -->
 
   <!-- Asctec Quad Node -->
-  <node name="asctec_controller" 
+  <!-- node name="asctec_controller" 
 	pkg="pc_asctec_sim" 
 	type="quad_node" 
 	output="screen">
@@ -29,15 +32,13 @@
      <param name="q_name" value="$(arg q_name)"/>
      <param name="q_frame" value="$(arg q_frame)"/>
      <param name="w_frame" value="$(arg w_frame)"/>
-  </node>
+  </node -->
 
-  <!-- Param Tuner -->
-  <node name="tuner" 
+  <!-- TuLiP Controller -->
+  <node name="TuLiP_controller" 
         pkg="pc_asctec_sim" 
-        type="tuner_node" 
+        type="TuLiP_ROS.py" 
         output="screen">
-
-     <param name="q_name" value="$(arg q_name)"/>
   </node>
 
 </launch>

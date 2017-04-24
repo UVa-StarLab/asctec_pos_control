@@ -25,7 +25,7 @@ typedef struct QUAD_CMD
 	int xyFree;
 	bool start, stopTimer, newPath;
 	float battery;
-	float x,y,vx,vy,ax,ay;
+	float x,y,vx,vy;
 
 	path_type type;
 	pc_asctec_sim::pc_traj_cmd f_path;

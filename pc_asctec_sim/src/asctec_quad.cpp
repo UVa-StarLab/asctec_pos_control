@@ -85,6 +85,7 @@ bool AscTec_Quad::setQuadGoal(struct GOAL_DATA * g)
 			Q_ptr->goal.x = g->goal.x;
 			Q_ptr->goal.y = g->goal.y;
 			Q_ptr->goal.z = g->goal.z;
+			Q_ptr->goal.yaw = g->goal.yaw;
 		}
 		return true;
 	}
